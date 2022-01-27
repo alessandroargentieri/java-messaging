@@ -2,14 +2,18 @@ package com.example.notificationdemo;
 
 import com.example.notificationdemo.notifications.Notification;
 import com.example.notificationdemo.notifications.NotificationException;
+import com.example.notificationdemo.notifications.consumers.ActiveMqConsumer;
 import com.example.notificationdemo.notifications.consumers.RabbitMqConsumer;
 import com.example.notificationdemo.notifications.consumers.SqsConsumer;
+import com.example.notificationdemo.notifications.producers.ActiveMqNotification;
 import com.example.notificationdemo.notifications.producers.EndpointNotification;
 import com.example.notificationdemo.notifications.producers.RabbitMqNotification;
 import com.example.notificationdemo.notifications.producers.SnsNotification;
 import com.rabbitmq.client.DeliverCallback;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+import javax.jms.JMSException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -21,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @SpringBootApplication
 public class NotificationdemoApplication {
 
-	public static void main(String[] args) throws URISyntaxException, NotificationException, InterruptedException, IOException, TimeoutException {
+	public static void main(String[] args) throws URISyntaxException, NotificationException, InterruptedException, IOException, TimeoutException, JMSException {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SQS-SNS test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -52,7 +56,7 @@ public class NotificationdemoApplication {
 		});
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ RabbitMQ test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+		/*
 		RabbitMqNotification<String> rabbitMqNotification = new RabbitMqNotification<>("rabbitmq-test");
 
 		RabbitMqConsumer rabbitMqConsumer = new RabbitMqConsumer("rabbitmq-test", rabbitMqNotification.getExchange());
@@ -64,8 +68,33 @@ public class NotificationdemoApplication {
         	System.out.println("Message received from RabbitMQ queue: ");
 			System.out.println(message);
     	};
-		rabbitMqConsumer.onReadMessage(deliverCallback);
+		rabbitMqConsumer.onReadMessage(deliverCallback); */
 
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ActiveMQ test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+		ActiveMqNotification<String> activeMqNotification = new ActiveMqNotification<>("activemq-test");
+
+		ActiveMqConsumer activeMqConsumer = new ActiveMqConsumer("activemq-test", activeMqNotification.getTopicName());
+
+		activeMqNotification.issue("Hey you, d'ya got the message?");
+
+		Executors.newSingleThreadExecutor().submit(
+				() -> {
+					boolean exit = false;
+					while(!exit) {
+						String message = null;
+						try {
+							message = activeMqConsumer.readMessage();
+						} catch (JMSException e) {
+							e.printStackTrace();
+						}
+						if (message != null) {
+							System.out.println(String.format("ActiveMQ message received: %s", message));
+							exit = true;
+						}
+					}
+				}
+		);
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Endpoint test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
