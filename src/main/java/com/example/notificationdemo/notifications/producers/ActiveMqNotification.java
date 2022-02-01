@@ -18,7 +18,7 @@ import javax.jms.*;
  */
 public class ActiveMqNotification<T> implements Notification<T> {
 
-    private String id;
+    private final String id;
     private String topicName;
     private Connection connection;
     private Session session;
@@ -80,6 +80,10 @@ public class ActiveMqNotification<T> implements Notification<T> {
 
     @Override
     public void issue(T body) throws NotificationException {
+        if (body == null) throw new NotificationException("Body is null");
+        if (this.session == null)  throw new NotificationException("ActiveMQ session is null");
+        if (this.producer == null)  throw new NotificationException("ActiveMQ producer exchange is null");
+
         try {
             mapper.writeValueAsString(body);
             TextMessage message = session.createTextMessage(mapper.writeValueAsString(body));

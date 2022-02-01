@@ -17,10 +17,10 @@ import java.net.URL;
  */
 public class EndpointNotification<T> implements Notification<T> {
 
-    private String id;
+    private final String id;
     private Endpoint endpoint;
 
-    public EndpointNotification (final String id, final Endpoint endpoint) {
+    public EndpointNotification (String id, final Endpoint endpoint) {
         this.id = id;
         this.endpoint = endpoint;
     }
@@ -32,9 +32,9 @@ public class EndpointNotification<T> implements Notification<T> {
 
     @Override
     public void issue(T body) throws NotificationException {
-        if (body == null || endpoint == null || endpoint.getUrl() == null) {
-            throw new NotificationException("Body cannot be null");
-        }
+        if (body == null) throw new NotificationException("Body is null");
+        if (this.endpoint == null || this.endpoint.getUrl() == null)  throw new NotificationException("Endpoint is null");
+
         new RestTemplate().postForObject(endpoint.getUrl(),body, String.class);
     }
 

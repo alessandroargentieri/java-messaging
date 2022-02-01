@@ -30,76 +30,51 @@ public class NotificationdemoApplication {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SQS-SNS test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		SnsNotification<String> snsNotification = new SnsNotification<>("sns-sqs-test");
-		SqsConsumer sqsConsumer = new SqsConsumer("sns-sqs-test", snsNotification.getTopicArn());
+
+		SqsConsumer sqsConsumer0 = new SqsConsumer("sns-sqs-test", snsNotification.getTopicArn());
+		SqsConsumer sqsConsumer1 = new SqsConsumer("sns-sqs-test", snsNotification.getTopicArn());
+
+		sqsConsumerOnRead(sqsConsumer0);
+		sqsConsumerOnRead(sqsConsumer1);
 
 		snsNotification.issue("Get the message?");
 
-		ExecutorService exec = Executors.newSingleThreadExecutor();
-		exec.submit(() -> {
-			AtomicBoolean received = new AtomicBoolean(false);
-			while(!received.get()) {
-				sqsConsumer.readMessages().forEach(
-						message -> {
-							if (message != null) {
-								System.out.println("Message received from SQS: ");
-								System.out.println(message.body());
-								received.set(true);
-							}
-						}
-				);
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		});
-
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ RabbitMQ test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		/*
+
 		RabbitMqNotification<String> rabbitMqNotification = new RabbitMqNotification<>("rabbitmq-test");
 
-		RabbitMqConsumer rabbitMqConsumer = new RabbitMqConsumer("rabbitmq-test", rabbitMqNotification.getExchange());
-
-		rabbitMqNotification.issue("Will you get this message?");
+		RabbitMqConsumer rabbitMqConsumer1 = new RabbitMqConsumer("rabbitmq-test", rabbitMqNotification.getExchange());
+		RabbitMqConsumer rabbitMqConsumer2 = new RabbitMqConsumer("rabbitmq-test", rabbitMqNotification.getExchange());
 
 		DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-        	String message = new String(delivery.getBody(), "UTF-8");
-        	System.out.println("Message received from RabbitMQ queue: ");
+			String message = new String(delivery.getBody(), "UTF-8");
+			System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+			System.out.println(String.format("Message received from RabbitMQ consumerTag %s: ", consumerTag));
 			System.out.println(message);
+			System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     	};
-		rabbitMqConsumer.onReadMessage(deliverCallback); */
+		rabbitMqConsumer1.onReadMessage(deliverCallback);
+		rabbitMqConsumer2.onReadMessage(deliverCallback);
+
+		rabbitMqNotification.issue("Will you get this message?");
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ActiveMQ test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		ActiveMqNotification<String> activeMqNotification = new ActiveMqNotification<>("activemq-test");
 
-		ActiveMqConsumer activeMqConsumer = new ActiveMqConsumer("activemq-test", activeMqNotification.getTopicName());
+		ActiveMqConsumer activeMqConsumer0 = new ActiveMqConsumer("activemq-test", activeMqNotification.getTopicName());
+		ActiveMqConsumer activeMqConsumer1 = new ActiveMqConsumer("activemq-test", activeMqNotification.getTopicName());
 
-		activeMqNotification.issue("Hey you, d'ya got the message?");
+		activeMqConsumerOnRead(activeMqConsumer0);
+		activeMqConsumerOnRead(activeMqConsumer1);
 
-		Executors.newSingleThreadExecutor().submit(
-				() -> {
-					boolean exit = false;
-					while(!exit) {
-						String message = null;
-						try {
-							message = activeMqConsumer.readMessage();
-						} catch (JMSException e) {
-							e.printStackTrace();
-						}
-						if (message != null) {
-							System.out.println(String.format("ActiveMQ message received: %s", message));
-							exit = true;
-						}
-					}
-				}
-		);
+		activeMqNotification.issue("Hey u, d'ya get the message?");
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Endpoint test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		EndpointNotification.Endpoint endpoint = new EndpointNotification.Endpoint(new URL("http://localhost:8080/callback"));
 		Notification<String> endpointNotification = new EndpointNotification<>("endpoint-test", endpoint);
+
 		Executors.newSingleThreadExecutor().submit(
 				() -> {
 					try {
@@ -116,6 +91,53 @@ public class NotificationdemoApplication {
 
 		SpringApplication.run(NotificationdemoApplication.class, args);
 
+	}
+
+	private static void activeMqConsumerOnRead(ActiveMqConsumer activeMqConsumer) {
+		Executors.newSingleThreadExecutor().submit(
+				() -> {
+					boolean exit = false;
+					while(!exit) {
+						String message = null;
+						try {
+							message = activeMqConsumer.readMessage();
+						} catch (JMSException e) {
+							e.printStackTrace();
+						}
+						if (message != null) {
+							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+							System.out.println(String.format("ActiveMQ message received from clientId %s: %s", activeMqConsumer.getClientId(), message));
+							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+							exit = true;
+						}
+					}
+				}
+		);
+	}
+
+	private static void sqsConsumerOnRead(SqsConsumer sqsConsumer) {
+		ExecutorService exec = Executors.newSingleThreadExecutor();
+		exec.submit(() -> {
+			AtomicBoolean received = new AtomicBoolean(false);
+			while(!received.get()) {
+				sqsConsumer.readMessages().forEach(
+						message -> {
+							if (message != null) {
+								System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+								System.out.println(String.format("Message received from SQS %s:", sqsConsumer.getQueue()));
+								System.out.println(message.body());
+								System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+								received.set(true);
+							}
+						}
+				);
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		});
 	}
 
 }

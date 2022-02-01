@@ -24,7 +24,7 @@ import java.net.URISyntaxException;
  */
 public class SnsNotification<T> implements Notification<T> {
 
-    private String id;
+    private final String id;
     private SnsClient snsClient;
     private String topicArn;
     private ObjectMapper mapper = new ObjectMapper();
@@ -42,6 +42,9 @@ public class SnsNotification<T> implements Notification<T> {
 
     @Override
     public void issue(T body) throws NotificationException {
+        if (body == null) throw new NotificationException("Body is null");
+        if (this.snsClient == null)  throw new NotificationException("SnsClient is null");
+
         try {
             pubTopic(snsClient, mapper.writeValueAsString(body), topicArn);
         } catch (JsonProcessingException e) {

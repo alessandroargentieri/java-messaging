@@ -2,10 +2,7 @@ package com.example.notificationdemo.notifications.consumers;
 
 import com.example.notificationdemo.notifications.producers.RabbitMqNotification;
 import com.example.notificationdemo.utils.Properties;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.DeliverCallback;
+import com.rabbitmq.client.*;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
@@ -56,7 +53,7 @@ public class RabbitMqConsumer {
         queueNumber++;
         queue = id+"-queue"+queueNumber+"";
         this.channel.queueDeclare(queue, false, false, false, null);
-        this.channel.queueBind(queue, exchange, null);
+        this.channel.queueBind(queue, exchange, "");
         return queue;
     }
 

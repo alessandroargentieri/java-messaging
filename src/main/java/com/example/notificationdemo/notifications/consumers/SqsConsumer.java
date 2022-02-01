@@ -23,6 +23,7 @@ public class SqsConsumer {
 
     private SqsClient sqsClient;
     private String sqsEndpoint;
+    private String queue;
     private static Integer queueNumber = -1;
 
     // it can be used in the same application to recycle the SnsClient and to automatically get the other inputs
@@ -33,8 +34,9 @@ public class SqsConsumer {
     public SqsConsumer(String id, String topicArn) throws URISyntaxException {
         this.sqsClient = sqsClient();  // creates a new SqsClient
         queueNumber++;
-        this.sqsEndpoint = createQueue(sqsClient, id+"sqs"+queueNumber+"");
-        subscribeToTopic(snsClient(), topicArn, sqsEndpoint);
+        this.queue = id+"-sqs"+queueNumber+"";
+        this.sqsEndpoint = createQueue(this.sqsClient,this.queue);
+        subscribeToTopic(snsClient(), topicArn, this.sqsEndpoint);
     }
 
     private SqsConsumer(String id, String topicArn, final SnsClient snsClient) throws URISyntaxException {
@@ -110,6 +112,10 @@ public class SqsConsumer {
         } catch (SnsException e) {
             System.err.println(e.awsErrorDetails().errorMessage());
         }
+    }
+
+    public String getQueue() {
+        return this.queue;
     }
 
 }

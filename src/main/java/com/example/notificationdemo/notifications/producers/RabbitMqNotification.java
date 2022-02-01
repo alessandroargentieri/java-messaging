@@ -21,7 +21,7 @@ import java.util.concurrent.TimeoutException;
  */
 public class RabbitMqNotification<T> implements Notification<T> {
 
-    private String id;
+    private final String id;
     private String exchange;
     private Channel channel;
     private ObjectMapper mapper = new ObjectMapper();
@@ -53,7 +53,7 @@ public class RabbitMqNotification<T> implements Notification<T> {
 
     private String createExchange(String id) throws IOException, TimeoutException {
         String exchange = id+"-exchange";
-        this.channel.exchangeDeclare(this.exchange, BuiltinExchangeType.FANOUT, true, false, null);
+        this.channel.exchangeDeclare(exchange, BuiltinExchangeType.FANOUT, true, false, null);
         return exchange;
     }
 
@@ -64,7 +64,9 @@ public class RabbitMqNotification<T> implements Notification<T> {
 
     @Override
     public void issue(T body) throws NotificationException {
-        if (body == null || exchange == null) throw new NotificationException("");
+        if (body == null) throw new NotificationException("Body is null");
+        if (this.exchange == null)  throw new NotificationException("RabbitMQ exchange is null");
+
         try {
             this.channel.basicPublish(this.exchange, "", null, mapper.writeValueAsString(body).getBytes("UTF-8"));
         } catch (IOException e) {

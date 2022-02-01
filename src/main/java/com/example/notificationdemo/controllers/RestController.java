@@ -8,7 +8,9 @@ public class RestController {
 
     @PostMapping("/callback")
     public String callbackAPI(@RequestBody String messageBody) {
+        System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         System.out.println(String.format("Callback-API received this message: %s", messageBody));
+        System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         return "OK";
     }
 }
