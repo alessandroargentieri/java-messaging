@@ -49,7 +49,6 @@ public class NotificationdemoApplication {
 			System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 			System.out.println(String.format("Message received from RabbitMQ consumerTag %s: ", consumerTag));
 			System.out.println(message);
-			System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     	};
 		rabbitMqConsumer1.onReadMessage(deliverCallback);
 		rabbitMqConsumer2.onReadMessage(deliverCallback);
@@ -76,7 +75,6 @@ public class NotificationdemoApplication {
 		KafkaStreamConsumer kafkaStreamConsumer2 = KafkaStreamConsumer.createConsumer("kafka-test", kafkaNotification.getTopic());
 		kafkaStreamConsumer2.start();
 
-		System.out.println("Sleep 20 seconds");
 		Thread.sleep(20000);
 		kafkaNotification.issue("First message on Kafka");
 		kafkaNotification.issue("Second message on Kafka");
@@ -120,7 +118,6 @@ public class NotificationdemoApplication {
 						if (message != null) {
 							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 							System.out.println(String.format("ActiveMQ message received from clientId %s: %s", activeMqConsumer.getClientId(), message));
-							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 							exit = true;
 						}
 					}
@@ -139,7 +136,6 @@ public class NotificationdemoApplication {
 								System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 								System.out.println(String.format("Message received from SQS %s:", sqsConsumer.getQueue()));
 								System.out.println(message.body());
-								System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 								received.set(true);
 							}
 						}

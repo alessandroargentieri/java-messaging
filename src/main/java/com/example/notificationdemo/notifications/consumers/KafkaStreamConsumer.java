@@ -60,9 +60,8 @@ public class KafkaStreamConsumer extends ShutdownableThread {
     public void doWork() {
         ConsumerRecords<String, String> records = this.consumer.poll(Duration.ofMillis(5000));
         for (ConsumerRecord<String, String> record : records) {
-            System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+            System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
             System.out.println("Kafka consumer " + this.consumerName + " - received message: (" + record.key() + ", " + record.value() + ") at offset " + record.offset());
-            System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         }
     }
 }
