@@ -1,7 +1,6 @@
 package com.example.notificationdemo.notifications.consumers;
 
 import com.example.notificationdemo.notifications.producers.SnsNotification;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.SnsException;
 import software.amazon.awssdk.services.sns.model.SubscribeRequest;
@@ -12,6 +11,8 @@ import software.amazon.awssdk.services.sqs.model.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 /**
  * This class acts as a consumer for the {@link SnsNotification}.
@@ -19,11 +20,13 @@ import java.util.List;
  * The new queue is then subscribed to the given SNS Topic in order to receive and buffer all the incoming messages.
  * Every SqsConsumer instance for a specific notification id has its own copy of the messages.
  */
-public class SqsConsumer {
+public class SqsConsumer implements Runnable {
 
     private SqsClient sqsClient;
     private String sqsEndpoint;
     private String queue;
+    private boolean stop = false;
+    private Consumer<Message> onReadConsumer;
     private static Integer queueNumber = -1;
 
     // it can be used in the same application to recycle the SnsClient and to automatically get the other inputs
@@ -118,4 +121,31 @@ public class SqsConsumer {
         return this.queue;
     }
 
+    public void stop() {
+        this.stop = true;
+    }
+
+    @Override
+    public void run() {
+        this.stop = false;
+        while(!stop) {
+            this.readMessages().forEach(
+                    message -> {
+                        if (message != null) {
+                          this.onReadConsumer.accept(message);
+                        }
+                    }
+            );
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void onReadStart(Consumer<Message> consumer) {
+        this.onReadConsumer = consumer;
+        Executors.newSingleThreadExecutor().submit(this);
+    }
 }

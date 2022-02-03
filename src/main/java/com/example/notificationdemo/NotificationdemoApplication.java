@@ -10,6 +10,7 @@ import com.example.notificationdemo.notifications.producers.*;
 import com.rabbitmq.client.DeliverCallback;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import software.amazon.awssdk.services.sqs.model.Message;
 
 import javax.jms.JMSException;
 import java.io.IOException;
@@ -19,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 @SpringBootApplication
 public class NotificationdemoApplication {
@@ -32,8 +34,8 @@ public class NotificationdemoApplication {
 		SqsConsumer sqsConsumer0 = new SqsConsumer("sns-sqs-test", snsNotification.getTopicArn());
 		SqsConsumer sqsConsumer1 = new SqsConsumer("sns-sqs-test", snsNotification.getTopicArn());
 
-		sqsConsumerOnRead(sqsConsumer0);
-		sqsConsumerOnRead(sqsConsumer1);
+		sqsConsumer0.onReadStart(message -> consumeSqsMessage(sqsConsumer0, message));
+		sqsConsumer1.onReadStart(message -> consumeSqsMessage(sqsConsumer1, message));
 
 		snsNotification.issue("Get the message?");
 
@@ -62,8 +64,8 @@ public class NotificationdemoApplication {
 		ActiveMqConsumer activeMqConsumer0 = new ActiveMqConsumer("activemq-test", activeMqNotification.getTopicName());
 		ActiveMqConsumer activeMqConsumer1 = new ActiveMqConsumer("activemq-test", activeMqNotification.getTopicName());
 
-		activeMqConsumerOnRead(activeMqConsumer0);
-		activeMqConsumerOnRead(activeMqConsumer1);
+		activeMqConsumer0.onReadStart(message -> consumeActiveMqMessage(activeMqConsumer0, message));
+		activeMqConsumer1.onReadStart(message -> consumeActiveMqMessage(activeMqConsumer1, message));
 
 		activeMqNotification.issue("Hey u, d'ya get the message?");
 
@@ -101,52 +103,20 @@ public class NotificationdemoApplication {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Starting Spring Web ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		SpringApplication.run(NotificationdemoApplication.class, args);
-
 	}
 
-	private static void activeMqConsumerOnRead(ActiveMqConsumer activeMqConsumer) {
-		Executors.newSingleThreadExecutor().submit(
-				() -> {
-					boolean exit = false;
-					while(!exit) {
-						String message = null;
-						try {
-							message = activeMqConsumer.readMessage();
-						} catch (JMSException e) {
-							e.printStackTrace();
-						}
-						if (message != null) {
-							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-							System.out.println(String.format("ActiveMQ message received from clientId %s: %s", activeMqConsumer.getClientId(), message));
-							exit = true;
-						}
-					}
-				}
-		);
+	private static void consumeSqsMessage(SqsConsumer sqsConsumer, Message message) {
+		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		System.out.println(String.format("Message received from SQS %s:", sqsConsumer.getQueue()));
+		System.out.println(message.body());
 	}
 
-	private static void sqsConsumerOnRead(SqsConsumer sqsConsumer) {
-		ExecutorService exec = Executors.newSingleThreadExecutor();
-		exec.submit(() -> {
-			AtomicBoolean received = new AtomicBoolean(false);
-			while(!received.get()) {
-				sqsConsumer.readMessages().forEach(
-						message -> {
-							if (message != null) {
-								System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-								System.out.println(String.format("Message received from SQS %s:", sqsConsumer.getQueue()));
-								System.out.println(message.body());
-								received.set(true);
-							}
-						}
-				);
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		});
+	private static void consumeActiveMqMessage(ActiveMqConsumer activeMqConsumer, String message) {
+		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		System.out.println(String.format("ActiveMQ message received from clientId %s: %s", activeMqConsumer.getClientId(), message));
 	}
+
+
+
 
 }

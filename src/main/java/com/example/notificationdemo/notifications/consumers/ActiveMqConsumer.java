@@ -5,13 +5,15 @@ import com.example.notificationdemo.utils.Properties;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
 import javax.jms.*;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 /**
  * This class acts as a consumer for the {@link com.example.notificationdemo.notifications.producers.ActiveMqNotification}.
  * It creates a subscriber for the producer's topic by specifying the notification id and the topic name.
  * Every ActiveMqConsumer instance for a specific notification id has its own copy of the messages.
  */
-public class ActiveMqConsumer {
+public class ActiveMqConsumer implements Runnable {
 
     private String id;
     private Connection connection;
@@ -19,6 +21,8 @@ public class ActiveMqConsumer {
     private Topic topic;
     private MessageConsumer consumer;
     private String clientId;
+    private boolean stop = false;
+    private Consumer<String> onReadConsumer;
 
     private static int clientIdIndex = -1;
 
@@ -76,4 +80,35 @@ public class ActiveMqConsumer {
         return this.clientId;
     }
 
+
+    public void stop() {
+        this.stop = true;
+    }
+
+    @Override
+    public void run() {
+        this.stop = false;
+        while (!stop) {
+            try {
+                String message = this.readMessage();
+                if (message != null) {
+                    this.onReadConsumer.accept(message);
+                }
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void onReadStart(Consumer<String> consumer) {
+        this.onReadConsumer = consumer;
+        Executors.newSingleThreadExecutor().submit(this);
+    }
 }
+
+
