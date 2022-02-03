@@ -1,6 +1,7 @@
 package com.example.notificationdemo.notifications.consumers;
 
 import com.example.notificationdemo.notifications.producers.SnsNotification;
+import com.example.notificationdemo.utils.ContinuousRunnable;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.SnsException;
 import software.amazon.awssdk.services.sns.model.SubscribeRequest;
@@ -21,12 +22,11 @@ import java.util.function.Consumer;
  * Every SqsConsumer instance for a specific notification id has its own copy of the messages.
  * It can be started as a {@link Thread}.
  */
-public class SqsConsumer implements Runnable {
+public class SqsConsumer extends ContinuousRunnable {
 
     private SqsClient sqsClient;
     private String sqsEndpoint;
     private String queue;
-    private boolean stop = false;
     private Consumer<Message> onReadConsumer;
     private static Integer queueNumber = -1;
 
@@ -118,34 +118,23 @@ public class SqsConsumer implements Runnable {
         }
     }
 
+    /**
+     * Returns the queue name.
+     * @return the queue name
+     */
     public String getQueue() {
         return this.queue;
     }
 
-    /**
-     * Stops listening to the incoming messages.
-     */
-    public void stop() {
-        this.stop = true;
-    }
-
     @Override
-    public void run() {
-        this.stop = false;
-        while(!stop) {
-            this.readMessages().forEach(
-                    message -> {
-                        if (message != null) {
-                          this.onReadConsumer.accept(message);
-                        }
+    protected void doWork() {
+        this.readMessages().forEach(
+                message -> {
+                    if (message != null) {
+                        this.onReadConsumer.accept(message);
                     }
-            );
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+                }
+        );
     }
 
     /**

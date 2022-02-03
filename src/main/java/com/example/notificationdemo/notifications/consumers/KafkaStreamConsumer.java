@@ -1,5 +1,6 @@
 package com.example.notificationdemo.notifications.consumers;
 
+import com.example.notificationdemo.utils.ContinuousRunnable;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -14,13 +15,12 @@ import java.util.function.Consumer;
 /**
  * KafkaStreamConsumer is a consumer for the incoming Kafka messages. It can be started as a {@link Thread}.
  */
-public class KafkaStreamConsumer implements Runnable {
+public class KafkaStreamConsumer extends ContinuousRunnable {
 
     private final String id;
     private String topic;
     private KafkaConsumer<String, String> consumer;
     private String consumerName;
-    private boolean stop = false;
     private Consumer<ConsumerRecord<String, String>> onReadConsumer;
 
     private static int consumerNumber = -1;
@@ -69,28 +69,11 @@ public class KafkaStreamConsumer implements Runnable {
         return consumerName;
     }
 
-    /**
-     * Stops listening to incoming messages.
-     */
-    public void stop() {
-        this.stop = true;
-    }
-
     @Override
-    public void run() {
-        this.stop = false;
-        while(!stop) {
-            ConsumerRecords<String, String> records = this.consumer.poll(Duration.ofMillis(5000));
-            for (ConsumerRecord<String, String> record : records) {
-                this.onReadConsumer.accept(record);
-                System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-                System.out.println("Kafka consumer " + this.consumerName + " - received message: (" + record.key() + ", " + record.value() + ") at offset " + record.offset());
-            }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+    protected void doWork() {
+        ConsumerRecords<String, String> records = this.consumer.poll(Duration.ofMillis(5000));
+        for (ConsumerRecord<String, String> record : records) {
+            this.onReadConsumer.accept(record);
         }
     }
 

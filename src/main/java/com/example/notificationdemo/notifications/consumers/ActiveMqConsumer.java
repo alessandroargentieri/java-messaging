@@ -1,6 +1,7 @@
 package com.example.notificationdemo.notifications.consumers;
 
 import com.example.notificationdemo.notifications.producers.ActiveMqNotification;
+import com.example.notificationdemo.utils.ContinuousRunnable;
 import com.example.notificationdemo.utils.Properties;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
@@ -14,7 +15,7 @@ import java.util.function.Consumer;
  * Every ActiveMqConsumer instance for a specific notification id has its own copy of the messages.
  * It can be started as a {@link Thread}
  */
-public class ActiveMqConsumer implements Runnable {
+public class ActiveMqConsumer extends ContinuousRunnable {
 
     private String id;
     private Connection connection;
@@ -22,7 +23,6 @@ public class ActiveMqConsumer implements Runnable {
     private Topic topic;
     private MessageConsumer consumer;
     private String clientId;
-    private boolean stop = false;
     private Consumer<String> onReadConsumer;
 
     private static int clientIdIndex = -1;
@@ -81,28 +81,15 @@ public class ActiveMqConsumer implements Runnable {
         return this.clientId;
     }
 
-
-    public void stop() {
-        this.stop = true;
-    }
-
     @Override
-    public void run() {
-        this.stop = false;
-        while (!stop) {
-            try {
-                String message = this.readMessage();
-                if (message != null) {
-                    this.onReadConsumer.accept(message);
-                }
-            } catch (JMSException e) {
-                e.printStackTrace();
+    protected void doWork() {
+        try {
+            String message = this.readMessage();
+            if (message != null) {
+                this.onReadConsumer.accept(message);
             }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        } catch (JMSException e) {
+            e.printStackTrace();
         }
     }
 
