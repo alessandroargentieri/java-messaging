@@ -5,6 +5,17 @@ package com.example.notificationdemo.notifications;
  * @param <T> the type of the object it must be notified as body of the message.
  */
 public interface Notification<T> {
+
+    /**
+     * Unique identifier for the specific notification type
+     * @return the unique identifier of the notification type
+     */
     String id();
+
+    /**
+     * Emits the notification on a given channel
+     * @param body the object to be sent as payload
+     * @throws NotificationException
+     */
     void issue(T body) throws NotificationException;
 }

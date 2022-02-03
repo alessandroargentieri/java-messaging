@@ -30,7 +30,7 @@ public class ActiveMqNotification<T> implements Notification<T> {
 
     public ActiveMqNotification(String id) throws JMSException {
         this.id = id;
-        this.connection = connection();
+        this.connection = connection(id);
         this.session = session(this.connection);
         this.topicName = id+"-topic";
         this.topic = this.session.createTopic(this.topicName);
@@ -93,9 +93,9 @@ public class ActiveMqNotification<T> implements Notification<T> {
         }
     }
 
-    private Connection connection() throws JMSException {
+    private Connection connection(String id) throws JMSException {
         clientIdIndex++;
-        String clientId = this.getClass().getSimpleName()+clientIdIndex+"";
+        String clientId = id+"-producer"+clientIdIndex+"";
 
         Connection connection = new ActiveMQConnectionFactory(Properties.get("activemq.host"))
                 .createConnection(Properties.get("activemq.username"), Properties.get("activemq.password"));

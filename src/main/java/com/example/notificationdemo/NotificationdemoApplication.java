@@ -3,12 +3,10 @@ package com.example.notificationdemo;
 import com.example.notificationdemo.notifications.Notification;
 import com.example.notificationdemo.notifications.NotificationException;
 import com.example.notificationdemo.notifications.consumers.ActiveMqConsumer;
+import com.example.notificationdemo.notifications.consumers.KafkaStreamConsumer;
 import com.example.notificationdemo.notifications.consumers.RabbitMqConsumer;
 import com.example.notificationdemo.notifications.consumers.SqsConsumer;
-import com.example.notificationdemo.notifications.producers.ActiveMqNotification;
-import com.example.notificationdemo.notifications.producers.EndpointNotification;
-import com.example.notificationdemo.notifications.producers.RabbitMqNotification;
-import com.example.notificationdemo.notifications.producers.SnsNotification;
+import com.example.notificationdemo.notifications.producers.*;
 import com.rabbitmq.client.DeliverCallback;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -69,6 +67,21 @@ public class NotificationdemoApplication {
 		activeMqConsumerOnRead(activeMqConsumer1);
 
 		activeMqNotification.issue("Hey u, d'ya get the message?");
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Kafka test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+		KafkaNotification<String> kafkaNotification = new KafkaNotification<>("kafka-test");
+		KafkaStreamConsumer kafkaStreamConsumer1 = KafkaStreamConsumer.createConsumer("kafka-test", kafkaNotification.getTopic());
+		kafkaStreamConsumer1.start();
+		KafkaStreamConsumer kafkaStreamConsumer2 = KafkaStreamConsumer.createConsumer("kafka-test", kafkaNotification.getTopic());
+		kafkaStreamConsumer2.start();
+
+		System.out.println("Sleep 20 seconds");
+		Thread.sleep(20000);
+		kafkaNotification.issue("First message on Kafka");
+		kafkaNotification.issue("Second message on Kafka");
+		kafkaNotification.issue("Third message on Kafka");
+
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Endpoint test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

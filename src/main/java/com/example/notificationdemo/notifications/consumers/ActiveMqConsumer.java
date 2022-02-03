@@ -25,7 +25,7 @@ public class ActiveMqConsumer {
     /* This constructor instantiates a new connection, session and topic (it will link to the ActiveMQ existing one) */
     public ActiveMqConsumer(String id, String topicName) throws JMSException {
         this.id = id;
-        this.connection = connection();
+        this.connection = connection(id);
         this.session = session(this.connection);
         this.topic = this.session.createTopic(topicName);
         this.consumer = this.session.createConsumer(topic);
@@ -53,9 +53,9 @@ public class ActiveMqConsumer {
         return null;
     }
 
-    private Connection connection() throws JMSException {
+    private Connection connection(String id) throws JMSException {
         clientIdIndex++;
-        this.clientId = this.id+"-consumer"+clientIdIndex+"";
+        this.clientId = id+"-consumer"+clientIdIndex+"";
 
         Connection connection = new ActiveMQConnectionFactory(Properties.get("activemq.host"))
                 .createConnection(Properties.get("activemq.username"), Properties.get("activemq.password"));
@@ -68,6 +68,10 @@ public class ActiveMqConsumer {
         return connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
+    /**
+     * returns the ActiveMq clientId of the consumer.
+     * @return the cliendId
+     */
     public String getClientId() {
         return this.clientId;
     }
