@@ -2,14 +2,12 @@ package com.example.notificationdemo.notifications.producers;
 
 import com.example.notificationdemo.notifications.Notification;
 import com.example.notificationdemo.notifications.NotificationException;
+import org.apache.http.Header;
 import org.springframework.http.HttpMethod;
-import org.springframework.lang.Nullable;
-import org.springframework.messaging.handler.annotation.Headers;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.net.URI;
 import java.net.URL;
+import java.util.List;
 
 /**
  * This class implements a @{link Notification} through an HTTP/S call to an Endpoint.
@@ -45,7 +43,7 @@ public class EndpointNotification<T> implements Notification<T> {
     public static class Endpoint {
         private URL url;
         private HttpMethod method;
-        private Headers headers;
+        private List<Header> headers;
 
         public Endpoint(URL url) {
             this.url = url;
