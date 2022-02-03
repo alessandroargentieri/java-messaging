@@ -8,6 +8,7 @@ import com.example.notificationdemo.notifications.consumers.RabbitMqConsumer;
 import com.example.notificationdemo.notifications.consumers.SqsConsumer;
 import com.example.notificationdemo.notifications.producers.*;
 import com.rabbitmq.client.DeliverCallback;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import software.amazon.awssdk.services.sqs.model.Message;
@@ -72,10 +73,12 @@ public class NotificationdemoApplication {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Kafka test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		KafkaNotification<String> kafkaNotification = new KafkaNotification<>("kafka-test");
+
+		KafkaStreamConsumer kafkaStreamConsumer0 = KafkaStreamConsumer.createConsumer("kafka-test", kafkaNotification.getTopic());
 		KafkaStreamConsumer kafkaStreamConsumer1 = KafkaStreamConsumer.createConsumer("kafka-test", kafkaNotification.getTopic());
-		kafkaStreamConsumer1.start();
-		KafkaStreamConsumer kafkaStreamConsumer2 = KafkaStreamConsumer.createConsumer("kafka-test", kafkaNotification.getTopic());
-		kafkaStreamConsumer2.start();
+
+		kafkaStreamConsumer0.onReadStart(message -> consumeKafkaMessage(kafkaStreamConsumer0, message));
+		kafkaStreamConsumer1.onReadStart(message -> consumeKafkaMessage(kafkaStreamConsumer1, message));
 
 		Thread.sleep(20000);
 		kafkaNotification.issue("First message on Kafka");
@@ -114,6 +117,11 @@ public class NotificationdemoApplication {
 	private static void consumeActiveMqMessage(ActiveMqConsumer activeMqConsumer, String message) {
 		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		System.out.println(String.format("ActiveMQ message received from clientId %s: %s", activeMqConsumer.getClientId(), message));
+	}
+
+	private static void consumeKafkaMessage(KafkaStreamConsumer kafkaStreamConsumer, ConsumerRecord<String, String> record) {
+		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		System.out.println("Kafka consumer " + kafkaStreamConsumer.getConsumerName() + " - received message: (" + record.key() + ", " + record.value() + ") at offset " + record.offset());
 	}
 
 

@@ -12,6 +12,7 @@ import java.util.function.Consumer;
  * This class acts as a consumer for the {@link com.example.notificationdemo.notifications.producers.ActiveMqNotification}.
  * It creates a subscriber for the producer's topic by specifying the notification id and the topic name.
  * Every ActiveMqConsumer instance for a specific notification id has its own copy of the messages.
+ * It can be started as a {@link Thread}
  */
 public class ActiveMqConsumer implements Runnable {
 
@@ -105,6 +106,11 @@ public class ActiveMqConsumer implements Runnable {
         }
     }
 
+    /**
+     * Starts listening and reacting to the messages.
+     * Gets a {@link Consumer} to consume the read messages.
+     * @param consumer the action to be performed on the read message
+     */
     public void onReadStart(Consumer<String> consumer) {
         this.onReadConsumer = consumer;
         Executors.newSingleThreadExecutor().submit(this);

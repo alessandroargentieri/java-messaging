@@ -1,6 +1,5 @@
 package com.example.notificationdemo.notifications.consumers;
 
-import kafka.utils.ShutdownableThread;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -9,13 +8,20 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
-public class KafkaStreamConsumer extends ShutdownableThread {
+/**
+ * KafkaStreamConsumer is a consumer for the incoming Kafka messages. It can be started as a {@link Thread}.
+ */
+public class KafkaStreamConsumer implements Runnable {
 
     private final String id;
     private String topic;
     private KafkaConsumer<String, String> consumer;
     private String consumerName;
+    private boolean stop = false;
+    private Consumer<ConsumerRecord<String, String>> onReadConsumer;
 
     private static int consumerNumber = -1;
 
@@ -25,7 +31,6 @@ public class KafkaStreamConsumer extends ShutdownableThread {
     }
 
     private KafkaStreamConsumer(String id, String consumerName, String topic) {
-        super(consumerName, false);
         this.id = id;
         this.consumerName = consumerName;
         this.topic = topic;
@@ -56,12 +61,46 @@ public class KafkaStreamConsumer extends ShutdownableThread {
         return consumer;
     }
 
+    /**
+     * Returns the Kafka consumer name.
+     * @return the kafka consumer name
+     */
+    public String getConsumerName() {
+        return consumerName;
+    }
+
+    /**
+     * Stops listening to incoming messages.
+     */
+    public void stop() {
+        this.stop = true;
+    }
+
     @Override
-    public void doWork() {
-        ConsumerRecords<String, String> records = this.consumer.poll(Duration.ofMillis(5000));
-        for (ConsumerRecord<String, String> record : records) {
-            System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-            System.out.println("Kafka consumer " + this.consumerName + " - received message: (" + record.key() + ", " + record.value() + ") at offset " + record.offset());
+    public void run() {
+        this.stop = false;
+        while(!stop) {
+            ConsumerRecords<String, String> records = this.consumer.poll(Duration.ofMillis(5000));
+            for (ConsumerRecord<String, String> record : records) {
+                this.onReadConsumer.accept(record);
+                System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                System.out.println("Kafka consumer " + this.consumerName + " - received message: (" + record.key() + ", " + record.value() + ") at offset " + record.offset());
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
+    }
+
+    /**
+     * Starts listening and reacting to the messages.
+     * Gets a {@link Consumer} to consume the read messages.
+     * @param consumer the action to be performed on the read message
+     */
+    public void onReadStart(Consumer<ConsumerRecord<String, String>> consumer) {
+        this.onReadConsumer = consumer;
+        Executors.newSingleThreadExecutor().submit(this);
     }
 }

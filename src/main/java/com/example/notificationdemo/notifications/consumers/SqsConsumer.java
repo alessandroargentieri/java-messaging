@@ -19,6 +19,7 @@ import java.util.function.Consumer;
  * It creates a queue by specifying the notification id and the topicArn of the related AWS SNS service.
  * The new queue is then subscribed to the given SNS Topic in order to receive and buffer all the incoming messages.
  * Every SqsConsumer instance for a specific notification id has its own copy of the messages.
+ * It can be started as a {@link Thread}.
  */
 public class SqsConsumer implements Runnable {
 
@@ -121,6 +122,9 @@ public class SqsConsumer implements Runnable {
         return this.queue;
     }
 
+    /**
+     * Stops listening to the incoming messages.
+     */
     public void stop() {
         this.stop = true;
     }
@@ -144,6 +148,11 @@ public class SqsConsumer implements Runnable {
         }
     }
 
+    /**
+     * Starts listening and reacting to the messages.
+     * Gets a {@link Consumer} to consume the read messages.
+     * @param consumer the action to be performed on the read message
+     */
     public void onReadStart(Consumer<Message> consumer) {
         this.onReadConsumer = consumer;
         Executors.newSingleThreadExecutor().submit(this);
