@@ -1,6 +1,6 @@
 package com.example.notificationdemo.notifications.consumers;
 
-import com.example.notificationdemo.notifications.producers.ActiveMqNotification;
+import com.example.notificationdemo.notifications.producers.ActiveMqChannel;
 import com.example.notificationdemo.utils.ContinuousRunnable;
 import com.example.notificationdemo.utils.Properties;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -10,7 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 /**
- * This class acts as a consumer for the {@link com.example.notificationdemo.notifications.producers.ActiveMqNotification}.
+ * This class acts as a consumer for the {@link ActiveMqChannel}.
  * It creates a subscriber for the producer's topic by specifying the notification id and the topic name.
  * Every ActiveMqConsumer instance for a specific notification id has its own copy of the messages.
  * It can be started as a {@link Thread}
@@ -37,7 +37,7 @@ public class ActiveMqConsumer extends ContinuousRunnable {
     }
 
     /* This constructor reuses the connection, session and topic of a given producer */
-    public ActiveMqConsumer(final ActiveMqNotification producer) throws JMSException {
+    public ActiveMqConsumer(final ActiveMqChannel producer) throws JMSException {
         this.id = producer.id();
         this.connection = producer.getConnection();
         this.session = producer.getSession();

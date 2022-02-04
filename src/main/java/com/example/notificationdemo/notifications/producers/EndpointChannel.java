@@ -1,6 +1,6 @@
 package com.example.notificationdemo.notifications.producers;
 
-import com.example.notificationdemo.notifications.Notification;
+import com.example.notificationdemo.notifications.Channel;
 import com.example.notificationdemo.notifications.NotificationException;
 import org.apache.http.Header;
 import org.springframework.http.HttpMethod;
@@ -13,19 +13,12 @@ import java.util.List;
  * This class implements a @{link Notification} through an HTTP/S call to an Endpoint.
  * @param <T> the body of the message to be sent over HTTP/S.
  */
-public class EndpointNotification<T> implements Notification<T> {
+public class EndpointChannel<T> implements Channel<T> {
 
-    private final String id;
     private Endpoint endpoint;
 
-    public EndpointNotification (String id, final Endpoint endpoint) {
-        this.id = id;
+    public EndpointChannel(final Endpoint endpoint) {
         this.endpoint = endpoint;
-    }
-
-    @Override
-    public String id() {
-        return this.id;
     }
 
     @Override
@@ -35,7 +28,6 @@ public class EndpointNotification<T> implements Notification<T> {
 
         new RestTemplate().postForObject(endpoint.getUrl(),body, String.class);
     }
-
 
     /**
      * Inner class representing the endpoint to be called as a notification callback.

@@ -1,11 +1,10 @@
 package com.example.notificationdemo.notifications.producers;
 
-import com.example.notificationdemo.notifications.Notification;
+import com.example.notificationdemo.notifications.Channel;
 import com.example.notificationdemo.notifications.NotificationException;
 import com.example.notificationdemo.utils.Properties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Value;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.SnsClientBuilder;
 import software.amazon.awssdk.services.sns.model.*;
@@ -16,26 +15,25 @@ import java.net.URISyntaxException;
 // https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/examples-simple-notification-service.html
 
 /**
- * This class emits a {@link Notification} by publishing a message
+ * This class emits a {@link Channel} by publishing a message
  * on a AWS Simple Notification Service (SNS).
  * It automatically creates an AWS SNS Topic (if it doesn't exist yet)
  * and publish the notification.
  * @param <T> the body of the message passed as a JSON String
  */
-public class SnsNotification<T> implements Notification<T> {
+public class SnsChannel<T> implements Channel<T> {
 
     private final String id;
     private SnsClient snsClient;
     private String topicArn;
     private ObjectMapper mapper = new ObjectMapper();
 
-    public SnsNotification(String id) throws URISyntaxException {
+    public SnsChannel(String id) throws URISyntaxException {
         this.id = id;
         this.snsClient = snsClient();
         this.topicArn = createSNSTopic(snsClient, id+"-sns");
     }
 
-    @Override
     public String id() {
         return this.id;
     }

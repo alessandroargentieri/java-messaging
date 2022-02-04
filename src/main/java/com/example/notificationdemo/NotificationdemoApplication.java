@@ -1,6 +1,6 @@
 package com.example.notificationdemo;
 
-import com.example.notificationdemo.notifications.Notification;
+import com.example.notificationdemo.notifications.Channel;
 import com.example.notificationdemo.notifications.NotificationException;
 import com.example.notificationdemo.notifications.consumers.ActiveMqConsumer;
 import com.example.notificationdemo.notifications.consumers.KafkaStreamConsumer;
@@ -17,11 +17,8 @@ import javax.jms.JMSException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 @SpringBootApplication
 public class NotificationdemoApplication {
@@ -30,7 +27,7 @@ public class NotificationdemoApplication {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SQS-SNS test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		SnsNotification<String> snsNotification = new SnsNotification<>("sns-sqs-test");
+		SnsChannel<String> snsNotification = new SnsChannel<>("sns-sqs-test");
 
 		SqsConsumer sqsConsumer0 = new SqsConsumer("sns-sqs-test", snsNotification.getTopicArn());
 		SqsConsumer sqsConsumer1 = new SqsConsumer("sns-sqs-test", snsNotification.getTopicArn());
@@ -42,7 +39,7 @@ public class NotificationdemoApplication {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ RabbitMQ test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		RabbitMqNotification<String> rabbitMqNotification = new RabbitMqNotification<>("rabbitmq-test");
+		RabbitMqChannel<String> rabbitMqNotification = new RabbitMqChannel<>("rabbitmq-test");
 
 		RabbitMqConsumer rabbitMqConsumer1 = new RabbitMqConsumer("rabbitmq-test", rabbitMqNotification.getExchange());
 		RabbitMqConsumer rabbitMqConsumer2 = new RabbitMqConsumer("rabbitmq-test", rabbitMqNotification.getExchange());
@@ -60,7 +57,7 @@ public class NotificationdemoApplication {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ActiveMQ test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		ActiveMqNotification<String> activeMqNotification = new ActiveMqNotification<>("activemq-test");
+		ActiveMqChannel<String> activeMqNotification = new ActiveMqChannel<>("activemq-test");
 
 		ActiveMqConsumer activeMqConsumer0 = new ActiveMqConsumer("activemq-test", activeMqNotification.getTopicName());
 		ActiveMqConsumer activeMqConsumer1 = new ActiveMqConsumer("activemq-test", activeMqNotification.getTopicName());
@@ -72,7 +69,7 @@ public class NotificationdemoApplication {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Kafka test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		KafkaNotification<String> kafkaNotification = new KafkaNotification<>("kafka-test");
+		KafkaChannel<String> kafkaNotification = new KafkaChannel<>("kafka-test");
 
 		KafkaStreamConsumer kafkaStreamConsumer0 = KafkaStreamConsumer.createConsumer("kafka-test", kafkaNotification.getTopic());
 		KafkaStreamConsumer kafkaStreamConsumer1 = KafkaStreamConsumer.createConsumer("kafka-test", kafkaNotification.getTopic());
@@ -88,15 +85,15 @@ public class NotificationdemoApplication {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Endpoint test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		EndpointNotification.Endpoint endpoint = new EndpointNotification.Endpoint(new URL("http://localhost:8080/callback"));
-		Notification<String> endpointNotification = new EndpointNotification<>("endpoint-test", endpoint);
+		EndpointChannel.Endpoint endpoint = new EndpointChannel.Endpoint(new URL("http://localhost:8080/callback"));
+		Channel<String> endpointChannel = new EndpointChannel<>(endpoint);
 
 		Executors.newSingleThreadExecutor().submit(
 				() -> {
 					try {
 						// let's wait 10s so the RestController bean is instantiated
 						Thread.sleep(10000);
-						endpointNotification.issue("Here is the message!");
+						endpointChannel.issue("Here is the message!");
 					} catch (InterruptedException | NotificationException e) {
 						e.printStackTrace();
 					}

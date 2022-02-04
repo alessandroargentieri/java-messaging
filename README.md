@@ -5,21 +5,21 @@ Example application on how to use Java in a event driver fashion.
 ## Summary
 
 This codebase contains some simple examples how of to engage an event driven architecture in Java.
-The `Notification<T>` interface provide a way to define a generic notification producer.
+The `Channel<T>` interface provide a way to define a generic notification producer.
 
 The implementation used in this codebase are three:
-- `EndpointNotification`: though which the notification is sent to a REST endpoint;
-- `SnsNotification`: through which the event is notified on `AWS SNS` service, by creating a new `topic` for that specific event;
-- `RabbitMqNotification`: though which the event is notified on `RabbitMQ` by creating a new `exchange`.
-- `ActiveMqNotification`: though which the event is notified on `Apache ActiveMQ` by creating a new `topic`.
-- `KafkaNotification`: though which the event is notified on `Apache Kafka` by creating a new `topic`.
+- `EndpointChannel`: though which the notification is sent to a REST endpoint;
+- `SnsChannel`: through which the event is notified on `AWS SNS` service, by creating a new `topic` for that specific event;
+- `RabbitMqChannel`: though which the event is notified on `RabbitMQ` by creating a new `exchange`.
+- `ActiveMqChannel`: though which the event is notified on `Apache ActiveMQ` by creating a new `topic`.
+- `KafkaChannel`: though which the event is notified on `Apache Kafka` by creating a new `topic`.
 
 The codebase provides a way to consume these three events with their respective consumer:
-- an endpoint in the `RestController` class which consumes the events sent via `EndpointNotification`;
+- an endpoint in the `RestController` class which consumes the events sent via `EndpointChannel`;
 - a `SqsConsumer` class which creates an `AWS SQS queue` and automatically suscribes it to the given `AWS SNS topic`;
 - a `RabbitMqConsumer` class which creates a `queue` and registers it to the given `exchange` to consume the messages.
-- an `ActiveMqConsumer` class which subscribe directly to the `ActiveMqNotification` `topic` to consume the messages.
-- a `KafkaStreamConsumer` class which reads the records coming from the `KafkaNotification` producer `topic`.
+- an `ActiveMqConsumer` class which subscribe directly to the `ActiveMqChannel` `topic` to consume the messages.
+- a `KafkaStreamConsumer` class which reads the records coming from the `KafkaChannel` producer `topic`.
 
 ## Run locally
 

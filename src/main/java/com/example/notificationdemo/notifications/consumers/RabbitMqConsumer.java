@@ -1,6 +1,6 @@
 package com.example.notificationdemo.notifications.consumers;
 
-import com.example.notificationdemo.notifications.producers.RabbitMqNotification;
+import com.example.notificationdemo.notifications.producers.RabbitMqChannel;
 import com.example.notificationdemo.utils.Properties;
 import com.rabbitmq.client.*;
 
@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 /**
- * This class acts as a consumer for the {@link com.example.notificationdemo.notifications.producers.RabbitMqNotification}.
+ * This class acts as a consumer for the {@link RabbitMqChannel}.
  * It creates a queue by specifying the notification id and the exchange name of the related RabbitMQ exchange.
  * The new queue is then subscribed to the given RabbitMQ exchange in order to receive and buffer all the incoming messages.
  * Every RabbitMqConsumer instance for a specific notification id has its own copy of the messages.
@@ -22,7 +22,7 @@ public class RabbitMqConsumer {
     private static int queueNumber = -1;
 
     // when used in the same application we can reuse the channel and get the input data from a given notification producer
-    public RabbitMqConsumer(final RabbitMqNotification producer) throws IOException {
+    public RabbitMqConsumer(final RabbitMqChannel producer) throws IOException {
         this(producer.id(), producer.getExchange(), producer.getChannel());
     }
 

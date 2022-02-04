@@ -1,6 +1,6 @@
 package com.example.notificationdemo.notifications.producers;
 
-import com.example.notificationdemo.notifications.Notification;
+import com.example.notificationdemo.notifications.Channel;
 import com.example.notificationdemo.notifications.NotificationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,14 +16,14 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
-public class KafkaNotification<T> implements Notification<T> {
+public class KafkaChannel<T> implements Channel<T> {
 
     private final String id;
     private String topic;
     private KafkaProducer<String, String> producer;
     private ObjectMapper mapper = new ObjectMapper();
 
-    public KafkaNotification(String id) {
+    public KafkaChannel(String id) {
         this.id = id;
         this.producer = initProducer();
         this.topic = topic(id);
@@ -55,11 +55,6 @@ public class KafkaNotification<T> implements Notification<T> {
             return null;
         }
         return topic;
-    }
-
-    @Override
-    public String id() {
-        return this.id;
     }
 
     @Override

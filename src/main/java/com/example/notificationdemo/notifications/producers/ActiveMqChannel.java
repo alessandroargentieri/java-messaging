@@ -1,6 +1,6 @@
 package com.example.notificationdemo.notifications.producers;
 
-import com.example.notificationdemo.notifications.Notification;
+import com.example.notificationdemo.notifications.Channel;
 import com.example.notificationdemo.notifications.NotificationException;
 import com.example.notificationdemo.utils.Properties;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -10,13 +10,13 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import javax.jms.*;
 
 /**
- * This class emits a {@link Notification} by publishing a message
+ * This class emits a {@link Channel} by publishing a message
  * on a ActiveMQ topic.
  * It automatically creates a topic (if it doesn't exist yet)
  * and publish the notification.
  * @param <T> the body of the message passed as a JSON String
  */
-public class ActiveMqNotification<T> implements Notification<T> {
+public class ActiveMqChannel<T> implements Channel<T> {
 
     private final String id;
     private String topicName;
@@ -28,7 +28,7 @@ public class ActiveMqNotification<T> implements Notification<T> {
 
     private static int clientIdIndex = 0;
 
-    public ActiveMqNotification(String id) throws JMSException {
+    public ActiveMqChannel(String id) throws JMSException {
         this.id = id;
         this.connection = connection(id);
         this.session = session(this.connection);
@@ -53,6 +53,10 @@ public class ActiveMqNotification<T> implements Notification<T> {
         this.connection.close();
     }
 
+    public String getId() {
+        return this.id;
+    }
+
     public Connection getConnection() {
         return connection;
     }
@@ -67,15 +71,6 @@ public class ActiveMqNotification<T> implements Notification<T> {
 
     public String getTopicName() throws JMSException {
         return topic.getTopicName();
-    }
-
-    public void setTopic(Topic topic) {
-        this.topic = topic;
-    }
-
-    @Override
-    public String id() {
-        return this.id;
     }
 
     @Override
@@ -106,6 +101,10 @@ public class ActiveMqNotification<T> implements Notification<T> {
 
     private Session session(final Connection connection) throws JMSException {
         return connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+    }
+
+    public String id() {
+       return this.id();
     }
 
 }

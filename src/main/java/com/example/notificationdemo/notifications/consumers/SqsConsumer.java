@@ -1,6 +1,6 @@
 package com.example.notificationdemo.notifications.consumers;
 
-import com.example.notificationdemo.notifications.producers.SnsNotification;
+import com.example.notificationdemo.notifications.producers.SnsChannel;
 import com.example.notificationdemo.utils.ContinuousRunnable;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.SnsException;
@@ -16,7 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 /**
- * This class acts as a consumer for the {@link SnsNotification}.
+ * This class acts as a consumer for the {@link SnsChannel}.
  * It creates a queue by specifying the notification id and the topicArn of the related AWS SNS service.
  * The new queue is then subscribed to the given SNS Topic in order to receive and buffer all the incoming messages.
  * Every SqsConsumer instance for a specific notification id has its own copy of the messages.
@@ -31,7 +31,7 @@ public class SqsConsumer extends ContinuousRunnable {
     private static Integer queueNumber = -1;
 
     // it can be used in the same application to recycle the SnsClient and to automatically get the other inputs
-    public SqsConsumer(final SnsNotification producer) throws URISyntaxException {
+    public SqsConsumer(final SnsChannel producer) throws URISyntaxException {
         this(producer.id(), producer.getTopicArn(), producer.getSnsClient());
     }
 
