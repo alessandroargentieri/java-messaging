@@ -1,7 +1,7 @@
 package com.example.notificationdemo.notifications.consumers;
 
 import com.example.notificationdemo.notifications.producers.SnsChannel;
-import com.example.notificationdemo.utils.ContinuousRunnable;
+import com.example.notificationdemo.utils.ContinuousJob;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.SnsException;
 import software.amazon.awssdk.services.sns.model.SubscribeRequest;
@@ -12,7 +12,6 @@ import software.amazon.awssdk.services.sqs.model.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 /**
@@ -22,7 +21,7 @@ import java.util.function.Consumer;
  * Every SqsConsumer instance for a specific notification id has its own copy of the messages.
  * It can be started as a {@link Thread}.
  */
-public class SqsConsumer extends ContinuousRunnable {
+public class SqsConsumer extends ContinuousJob {
 
     private SqsClient sqsClient;
     private String sqsEndpoint;
@@ -127,7 +126,7 @@ public class SqsConsumer extends ContinuousRunnable {
     }
 
     @Override
-    protected void doWork() {
+    public void doWork() {
         this.readMessages().forEach(
                 message -> {
                     if (message != null) {
@@ -144,6 +143,6 @@ public class SqsConsumer extends ContinuousRunnable {
      */
     public void onReadStart(Consumer<Message> consumer) {
         this.onReadConsumer = consumer;
-        Executors.newSingleThreadExecutor().submit(this);
+        this.start();
     }
 }

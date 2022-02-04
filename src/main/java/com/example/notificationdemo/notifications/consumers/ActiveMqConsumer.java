@@ -1,12 +1,11 @@
 package com.example.notificationdemo.notifications.consumers;
 
 import com.example.notificationdemo.notifications.producers.ActiveMqChannel;
-import com.example.notificationdemo.utils.ContinuousRunnable;
+import com.example.notificationdemo.utils.ContinuousJob;
 import com.example.notificationdemo.utils.Properties;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
 import javax.jms.*;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 /**
@@ -15,7 +14,7 @@ import java.util.function.Consumer;
  * Every ActiveMqConsumer instance for a specific notification id has its own copy of the messages.
  * It can be started as a {@link Thread}
  */
-public class ActiveMqConsumer extends ContinuousRunnable {
+public class ActiveMqConsumer extends ContinuousJob {
 
     private String id;
     private Connection connection;
@@ -82,7 +81,7 @@ public class ActiveMqConsumer extends ContinuousRunnable {
     }
 
     @Override
-    protected void doWork() {
+    public void doWork() {
         try {
             String message = this.readMessage();
             if (message != null) {
@@ -100,7 +99,7 @@ public class ActiveMqConsumer extends ContinuousRunnable {
      */
     public void onReadStart(Consumer<String> consumer) {
         this.onReadConsumer = consumer;
-        Executors.newSingleThreadExecutor().submit(this);
+        this.start();
     }
 }
 

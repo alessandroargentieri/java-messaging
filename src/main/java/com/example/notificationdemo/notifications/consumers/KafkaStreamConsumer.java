@@ -1,6 +1,6 @@
 package com.example.notificationdemo.notifications.consumers;
 
-import com.example.notificationdemo.utils.ContinuousRunnable;
+import com.example.notificationdemo.utils.ContinuousJob;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -9,13 +9,12 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Properties;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 /**
  * KafkaStreamConsumer is a consumer for the incoming Kafka messages. It can be started as a {@link Thread}.
  */
-public class KafkaStreamConsumer extends ContinuousRunnable {
+public class KafkaStreamConsumer extends ContinuousJob {
 
     private final String id;
     private String topic;
@@ -70,7 +69,7 @@ public class KafkaStreamConsumer extends ContinuousRunnable {
     }
 
     @Override
-    protected void doWork() {
+    public void doWork() {
         ConsumerRecords<String, String> records = this.consumer.poll(Duration.ofMillis(5000));
         for (ConsumerRecord<String, String> record : records) {
             this.onReadConsumer.accept(record);
@@ -84,6 +83,6 @@ public class KafkaStreamConsumer extends ContinuousRunnable {
      */
     public void onReadStart(Consumer<ConsumerRecord<String, String>> consumer) {
         this.onReadConsumer = consumer;
-        Executors.newSingleThreadExecutor().submit(this);
+        this.start();
     }
 }
