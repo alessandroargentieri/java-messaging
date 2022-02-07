@@ -2,6 +2,7 @@ package com.example.notificationdemo.notifications.consumers;
 
 import com.example.notificationdemo.notifications.producers.SnsChannel;
 import com.example.notificationdemo.utils.ContinuousJob;
+import com.example.notificationdemo.utils.Properties;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.SnsException;
 import software.amazon.awssdk.services.sns.model.SubscribeRequest;
@@ -23,38 +24,32 @@ import java.util.function.Consumer;
  */
 public class SqsConsumer extends ContinuousJob {
 
+    private String eventName;
     private SqsClient sqsClient;
     private String sqsEndpoint;
     private String queue;
     private Consumer<Message> onReadConsumer;
     private static Integer queueNumber = -1;
 
-    // it can be used in the same application to recycle the SnsClient and to automatically get the other inputs
-    public SqsConsumer(final SnsChannel producer) throws URISyntaxException {
-        this(producer.id(), producer.getTopicArn(), producer.getSnsClient());
-    }
-
-    public SqsConsumer(String id, String topicArn) throws URISyntaxException {
+    public SqsConsumer(String eventName, String topicArn) throws URISyntaxException {
+        this.eventName = eventName;
         this.sqsClient = sqsClient();  // creates a new SqsClient
         queueNumber++;
-        this.queue = id+"-sqs"+queueNumber+"";
+        this.queue = this.eventName+"-sqs"+queueNumber+"";
         this.sqsEndpoint = createQueue(this.sqsClient,this.queue);
         subscribeToTopic(snsClient(), topicArn, this.sqsEndpoint);
     }
 
-    private SqsConsumer(String id, String topicArn, final SnsClient snsClient) throws URISyntaxException {
-        this.sqsClient = sqsClient;  // reuses the sqsClient given in input
-        queueNumber++;
-        this.sqsEndpoint = createQueue(sqsClient, id+"sqs"+queueNumber+"");
-        subscribeToTopic(snsClient(), topicArn, sqsEndpoint);
-    }
-
     private SqsClient sqsClient() throws URISyntaxException {
-        return SqsClient.builder().endpointOverride(new URI("http://localhost:4566")).build();
+        return (Properties.get("aws.endpoint") != null)
+                ? SqsClient.builder().endpointOverride(new URI(Properties.get("aws.endpoint"))).build()
+                : SqsClient.builder().build();
     }
 
     private SnsClient snsClient() throws URISyntaxException {
-        return SnsClient.builder().endpointOverride(new URI("http://localhost:4566")).build();
+        return (Properties.get("aws.endpoint") != null)
+                ? SnsClient.builder().endpointOverride(new URI(Properties.get("aws.endpoint"))).build()
+                : SnsClient.builder().build();
     }
 
     private String createQueue(SqsClient sqsClient, String queueName) {
@@ -65,10 +60,14 @@ public class SqsConsumer extends ContinuousJob {
 
             sqsClient.createQueue(createQueueRequest);
 
-            GetQueueUrlResponse getQueueUrlResponse =
-                    sqsClient.getQueueUrl(GetQueueUrlRequest.builder().queueName(queueName).build());
-            String queueUrl = getQueueUrlResponse.queueUrl();
-            return queueUrl;
+            GetQueueUrlRequest getQueueUrlRequest = GetQueueUrlRequest.builder()
+                    .queueName(queueName)
+                    .build();
+
+            GetQueueUrlResponse getQueueUrlResponse = sqsClient.getQueueUrl(getQueueUrlRequest);
+
+            return getQueueUrlResponse.queueUrl();
+
         } catch (SqsException e) {
             System.err.println(e.awsErrorDetails().errorMessage());
         }

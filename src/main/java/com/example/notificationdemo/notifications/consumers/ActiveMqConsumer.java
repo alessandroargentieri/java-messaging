@@ -16,7 +16,7 @@ import java.util.function.Consumer;
  */
 public class ActiveMqConsumer extends ContinuousJob {
 
-    private String id;
+    private String eventName;
     private Connection connection;
     private Session session;
     private Topic topic;
@@ -27,9 +27,9 @@ public class ActiveMqConsumer extends ContinuousJob {
     private static int clientIdIndex = -1;
 
     /* This constructor instantiates a new connection, session and topic (it will link to the ActiveMQ existing one) */
-    public ActiveMqConsumer(String id, String topicName) throws JMSException {
-        this.id = id;
-        this.connection = connection(id);
+    public ActiveMqConsumer(String eventName, String topicName) throws JMSException {
+        this.eventName = eventName;
+        this.connection = connection(eventName);
         this.session = session(this.connection);
         this.topic = this.session.createTopic(topicName);
         this.consumer = this.session.createConsumer(topic);
@@ -37,7 +37,7 @@ public class ActiveMqConsumer extends ContinuousJob {
 
     /* This constructor reuses the connection, session and topic of a given producer */
     public ActiveMqConsumer(final ActiveMqChannel producer) throws JMSException {
-        this.id = producer.id();
+        this.eventName = producer.id();
         this.connection = producer.getConnection();
         this.session = producer.getSession();
         this.topic = producer.getTopic();

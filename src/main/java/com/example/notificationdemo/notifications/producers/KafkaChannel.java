@@ -18,15 +18,15 @@ import java.util.concurrent.ExecutionException;
 
 public class KafkaChannel<T> implements Channel<T> {
 
-    private final String id;
+    private final String eventName;
     private String topic;
     private KafkaProducer<String, String> producer;
     private ObjectMapper mapper = new ObjectMapper();
 
-    public KafkaChannel(String id) {
-        this.id = id;
+    public KafkaChannel(String eventName) {
+        this.eventName = eventName;
         this.producer = initProducer();
-        this.topic = topic(id);
+        this.topic = topic(eventName);
     }
 
     private String topic(String id) {

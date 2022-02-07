@@ -16,7 +16,7 @@ import java.util.function.Consumer;
  */
 public class KafkaStreamConsumer extends ContinuousJob {
 
-    private final String id;
+    private final String eventName;
     private String topic;
     private KafkaConsumer<String, String> consumer;
     private String consumerName;
@@ -29,8 +29,8 @@ public class KafkaStreamConsumer extends ContinuousJob {
         return new KafkaStreamConsumer(id, id+"-consumer"+consumerNumber+"", topic);
     }
 
-    private KafkaStreamConsumer(String id, String consumerName, String topic) {
-        this.id = id;
+    private KafkaStreamConsumer(String eventName, String consumerName, String topic) {
+        this.eventName = eventName;
         this.consumerName = consumerName;
         this.topic = topic;
         this.consumer = kafkaConsumer(topic);

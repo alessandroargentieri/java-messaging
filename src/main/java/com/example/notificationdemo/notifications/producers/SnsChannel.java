@@ -23,19 +23,19 @@ import java.net.URISyntaxException;
  */
 public class SnsChannel<T> implements Channel<T> {
 
-    private final String id;
+    private final String eventName;
     private SnsClient snsClient;
     private String topicArn;
     private ObjectMapper mapper = new ObjectMapper();
 
-    public SnsChannel(String id) throws URISyntaxException {
-        this.id = id;
+    public SnsChannel(String eventName) throws URISyntaxException {
+        this.eventName = eventName;
         this.snsClient = snsClient();
-        this.topicArn = createSNSTopic(snsClient, id+"-sns");
+        this.topicArn = createSNSTopic(snsClient, eventName +"-sns");
     }
 
     public String id() {
-        return this.id;
+        return this.eventName;
     }
 
     @Override

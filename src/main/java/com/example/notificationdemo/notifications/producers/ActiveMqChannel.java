@@ -18,7 +18,7 @@ import javax.jms.*;
  */
 public class ActiveMqChannel<T> implements Channel<T> {
 
-    private final String id;
+    private final String eventName;
     private String topicName;
     private Connection connection;
     private Session session;
@@ -28,11 +28,11 @@ public class ActiveMqChannel<T> implements Channel<T> {
 
     private static int clientIdIndex = 0;
 
-    public ActiveMqChannel(String id) throws JMSException {
-        this.id = id;
-        this.connection = connection(id);
+    public ActiveMqChannel(String eventName) throws JMSException {
+        this.eventName = eventName;
+        this.connection = connection(eventName);
         this.session = session(this.connection);
-        this.topicName = id+"-topic";
+        this.topicName = eventName +"-topic";
         this.topic = this.session.createTopic(this.topicName);
         this.producer = session.createProducer(topic);
     }
@@ -53,8 +53,8 @@ public class ActiveMqChannel<T> implements Channel<T> {
         this.connection.close();
     }
 
-    public String getId() {
-        return this.id;
+    public String getEventName() {
+        return this.eventName;
     }
 
     public Connection getConnection() {

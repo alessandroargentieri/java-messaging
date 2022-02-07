@@ -15,7 +15,7 @@ import java.util.concurrent.TimeoutException;
  */
 public class RabbitMqConsumer {
 
-    private String id;
+    private String eventName;
     private Channel channel;
     private String queue;
     private String exchange;
@@ -26,16 +26,16 @@ public class RabbitMqConsumer {
         this(producer.id(), producer.getExchange(), producer.getChannel());
     }
 
-    public RabbitMqConsumer(String id, String exchange) throws IOException, TimeoutException {
-        this.id = id;
+    public RabbitMqConsumer(String eventName, String exchange) throws IOException, TimeoutException {
+        this.eventName = eventName;
         this.channel = channel();  // creates a new channel
-        this.queue = createQueue(id, exchange);
+        this.queue = createQueue(eventName, exchange);
     }
 
-    private RabbitMqConsumer(String id, String exchange, final Channel channel) throws IOException {
-        this.id = id;
+    private RabbitMqConsumer(String eventName, String exchange, final Channel channel) throws IOException {
+        this.eventName = eventName;
         this.channel = channel;   // reuses the channel got from the notification given in input
-        this.queue = createQueue(id, exchange);
+        this.queue = createQueue(eventName, exchange);
     }
 
     private Channel channel() throws IOException, TimeoutException {

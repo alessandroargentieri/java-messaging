@@ -19,15 +19,15 @@ import java.util.concurrent.TimeoutException;
  */
 public class RabbitMqChannel<T> implements Channel<T> {
 
-    private final String id;
+    private final String eventName;
     private String exchange;
     private com.rabbitmq.client.Channel channel;
     private ObjectMapper mapper = new ObjectMapper();
 
-    public RabbitMqChannel(String id) throws IOException, TimeoutException {
-        this.id = id;
+    public RabbitMqChannel(String eventName) throws IOException, TimeoutException {
+        this.eventName = eventName;
         this.channel = channel();
-        this.exchange = createExchange(id);
+        this.exchange = createExchange(eventName);
     }
 
     public String getExchange() {
@@ -56,7 +56,7 @@ public class RabbitMqChannel<T> implements Channel<T> {
     }
 
     public String id() {
-        return this.id;
+        return this.eventName;
     }
 
     @Override
