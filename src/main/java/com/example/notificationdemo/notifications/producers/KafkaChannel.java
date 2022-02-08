@@ -35,7 +35,7 @@ public class KafkaChannel<T> implements Channel<T> {
         this.eventName = eventName;
         this.producer = initProducer();
         this.topic = topicName;
-        if (Boolean.TRUE.equals(com.example.notificationdemo.utils.Properties.get("kafka.enable.topic.create"))) {
+        if (Boolean.TRUE.equals(Boolean.parseBoolean(com.example.notificationdemo.utils.Properties.get("kafka.enable.topic.create")))) {
             // only if a specific flag is enabled the application has the priviledges to create a topic
             // else it must be attached to the topicName resource specified which already exists
             createTopic(topicName);

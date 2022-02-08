@@ -24,21 +24,58 @@ public class RabbitMqChannel<T> implements Channel<T> {
     private com.rabbitmq.client.Channel channel;
     private ObjectMapper mapper = new ObjectMapper();
 
-    public RabbitMqChannel(String eventName) throws IOException, TimeoutException {
-        this.eventName = eventName;
-        this.channel = channel();
-        this.exchange = createExchange(eventName);
+    /**
+     * Returns a new {@link RabbitMqChannel} by specifying the event name.
+     * The class attempts creating a new exchange or attaching to an existing one
+     * with the name "<event-name>-exchange".
+     * @param eventName the event name
+     * @return the RabbitMqChannel
+     * @throws IOException
+     * @throws TimeoutException
+     */
+    public static RabbitMqChannel createProducer(String eventName) throws IOException, TimeoutException {
+        return RabbitMqChannel.createProducer(eventName, eventName+"-exchange");
     }
 
+    /**
+     * Returns a new {@link RabbitMqChannel} by specifying the event name and the exchange name.
+     * The class attempts creating a new exchange or attaching to an existing one.
+     * @param eventName the event name
+     * @param exchangeName the exchange name
+     * @return the RabbitMqChannel
+     * @throws IOException
+     * @throws TimeoutException
+     */
+    public static RabbitMqChannel createProducer(String eventName, String exchangeName) throws IOException, TimeoutException {
+        return new RabbitMqChannel(eventName, exchangeName, channel());
+    }
+
+    private RabbitMqChannel(String eventName, String exchangeName, final com.rabbitmq.client.Channel channel) throws IOException, TimeoutException {
+        this.eventName = eventName;
+        this.channel = channel;
+        this.exchange = exchangeName;
+        if (Boolean.TRUE.equals(Boolean.parseBoolean(Properties.get("rabbitmq.enable.exchange.create")))) {
+            createExchange();
+        }
+    }
+
+    /**
+     * Returns the exchange name.
+     * @return the exchange name
+     */
     public String getExchange() {
         return this.exchange;
     }
 
+    /**
+     * Returns the {@link com.rabbitmq.client.Channel}
+     * @return the rabbitmq channel
+     */
     public com.rabbitmq.client.Channel getChannel() {
         return this.channel;
     }
 
-    private com.rabbitmq.client.Channel channel() throws IOException, TimeoutException {
+    private static com.rabbitmq.client.Channel channel() throws IOException, TimeoutException {
         ConnectionFactory factory = new ConnectionFactory();
 
         factory.setHost(Properties.get("rabbitmq.host"));
@@ -49,13 +86,15 @@ public class RabbitMqChannel<T> implements Channel<T> {
         return factory.newConnection().createChannel();
     }
 
-    private String createExchange(String id) throws IOException, TimeoutException {
-        String exchange = id+"-exchange";
-        this.channel.exchangeDeclare(exchange, BuiltinExchangeType.FANOUT, true, false, null);
-        return exchange;
+    private void createExchange() throws IOException {
+        this.channel.exchangeDeclare(this.exchange, BuiltinExchangeType.FANOUT, true, false, null);
     }
 
-    public String id() {
+    /**
+     * Returns the event name.
+     * @return the event name
+     */
+    public String getEventName() {
         return this.eventName;
     }
 

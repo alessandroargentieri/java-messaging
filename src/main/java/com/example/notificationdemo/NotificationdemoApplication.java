@@ -39,10 +39,10 @@ public class NotificationdemoApplication {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ RabbitMQ test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		RabbitMqChannel<String> rabbitMqNotification = new RabbitMqChannel<>("rabbitmq-test");
+		RabbitMqChannel<String> rabbitMqNotification = RabbitMqChannel.createProducer("rabbitmq-test");
 
-		RabbitMqConsumer rabbitMqConsumer1 = new RabbitMqConsumer("rabbitmq-test", rabbitMqNotification.getExchange());
-		RabbitMqConsumer rabbitMqConsumer2 = new RabbitMqConsumer("rabbitmq-test", rabbitMqNotification.getExchange());
+		RabbitMqConsumer rabbitMqConsumer1 = RabbitMqConsumer.createConsumer("rabbitmq-test", rabbitMqNotification.getExchange());
+		RabbitMqConsumer rabbitMqConsumer2 = RabbitMqConsumer.createConsumer("rabbitmq-test", rabbitMqNotification.getExchange());
 
 		DeliverCallback deliverCallback = (consumerTag, delivery) -> {
 			String message = new String(delivery.getBody(), "UTF-8");

@@ -21,40 +21,52 @@ public class RabbitMqConsumer {
     private String exchange;
     private static int queueNumber = -1;
 
+    public static RabbitMqConsumer createConsumer(String eventName, String exchangeName) throws IOException, TimeoutException {
+        queueNumber++;
+        return RabbitMqConsumer.createConsumer(eventName, exchangeName, eventName+"-queue"+queueNumber+"");
+    }
+
+    public static RabbitMqConsumer createConsumer(String eventName, String exchangeName, String queueName) throws IOException, TimeoutException {
+        return new RabbitMqConsumer(eventName, exchangeName, queueName, channel());
+    }
+
     // when used in the same application we can reuse the channel and get the input data from a given notification producer
-    public RabbitMqConsumer(final RabbitMqChannel producer) throws IOException {
-        this(producer.id(), producer.getExchange(), producer.getChannel());
+    public static RabbitMqConsumer createConsumerFromProducer(final RabbitMqChannel producer) throws IOException {
+        queueNumber++;
+        return RabbitMqConsumer.createConsumerFromProducer(producer, producer.getEventName()+"-queue"+queueNumber+"");
     }
 
-    public RabbitMqConsumer(String eventName, String exchange) throws IOException, TimeoutException {
+    // when used in the same application we can reuse the channel and get the input data from a given notification producer
+    public static RabbitMqConsumer createConsumerFromProducer(final RabbitMqChannel producer, String queueName) throws IOException {
+        return new RabbitMqConsumer(producer.getEventName(), producer.getExchange(), queueName, producer.getChannel());
+    }
+
+    private RabbitMqConsumer(String eventName, String exchangeName, String queueName, final Channel channel) throws IOException {
         this.eventName = eventName;
-        this.channel = channel();  // creates a new channel
-        this.queue = createQueue(eventName, exchange);
+        this.exchange = exchangeName;
+        this.channel = channel;
+        this.queue = queueName;
+        if (Boolean.TRUE.equals(Boolean.parseBoolean(Properties.get("rabbitmq.enable.queue.create")))) {
+            createQueue();
+        }
+        bindQueue();
     }
 
-    private RabbitMqConsumer(String eventName, String exchange, final Channel channel) throws IOException {
-        this.eventName = eventName;
-        this.channel = channel;   // reuses the channel got from the notification given in input
-        this.queue = createQueue(eventName, exchange);
-    }
-
-    private Channel channel() throws IOException, TimeoutException {
+    private static Channel channel() throws IOException, TimeoutException {
         ConnectionFactory factory = new ConnectionFactory();
-
         factory.setHost(Properties.get("rabbitmq.host"));
         factory.setPort(Integer.parseInt(Properties.get("rabbitmq.port")));
         factory.setUsername(Properties.get("rabbitmq.username"));
         factory.setPassword(Properties.get("rabbitmq.password"));
-
         return factory.newConnection().createChannel();
     }
 
-    private String createQueue(String id, String exchange) throws IOException {
-        queueNumber++;
-        queue = id+"-queue"+queueNumber+"";
-        this.channel.queueDeclare(queue, false, false, false, null);
-        this.channel.queueBind(queue, exchange, "");
-        return queue;
+    private void createQueue() throws IOException {
+        this.channel.queueDeclare(this.queue, false, false, false, null);
+    }
+
+    private void bindQueue() throws IOException {
+        this.channel.queueBind(this.queue, this.exchange, "");
     }
 
     /**

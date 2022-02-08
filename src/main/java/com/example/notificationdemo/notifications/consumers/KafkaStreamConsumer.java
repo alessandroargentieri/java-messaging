@@ -24,9 +24,9 @@ public class KafkaStreamConsumer extends ContinuousJob {
 
     private static int consumerNumber = -1;
 
-    public static KafkaStreamConsumer createConsumer(String id, String topic) {
+    public static KafkaStreamConsumer createConsumer(String eventName, String topic) {
         consumerNumber++;
-        return new KafkaStreamConsumer(id, id+"-consumer"+consumerNumber+"", topic);
+        return new KafkaStreamConsumer(eventName, eventName+"-consumer"+consumerNumber+"", topic);
     }
 
     private KafkaStreamConsumer(String eventName, String consumerName, String topic) {
@@ -68,6 +68,9 @@ public class KafkaStreamConsumer extends ContinuousJob {
         return consumerName;
     }
 
+    /**
+     * Contains the logic to be performed in a cyclic way any established interval of time
+     */
     @Override
     public void doWork() {
         ConsumerRecords<String, String> records = this.consumer.poll(Duration.ofMillis(5000));
@@ -78,11 +81,12 @@ public class KafkaStreamConsumer extends ContinuousJob {
 
     /**
      * Starts listening and reacting to the messages.
-     * Gets a {@link Consumer} to consume the read messages.
+     * Gets a {@link Consumer}, a callback action to consume the read messages.
      * @param consumer the action to be performed on the read message
      */
     public void onReadStart(Consumer<ConsumerRecord<String, String>> consumer) {
         this.onReadConsumer = consumer;
+        // the start() method of the superclass starts the cyclic job
         this.start();
     }
 }
