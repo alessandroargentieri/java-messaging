@@ -10,10 +10,11 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import javax.jms.*;
 
 /**
- * This class emits a {@link Channel} by publishing a message
+ * ActiveMqChannel class implements a {@link Channel} by publishing a message
  * on a ActiveMQ topic.
  * It automatically creates a topic (if it doesn't exist yet)
  * and publish the notification.
+ *
  * @param <T> the body of the message passed as a JSON String
  */
 public class ActiveMqChannel<T> implements Channel<T> {
@@ -28,12 +29,27 @@ public class ActiveMqChannel<T> implements Channel<T> {
 
     private static int clientIdIndex = 0;
 
-
-
+    /**
+     * Basic constructor for {@link ActiveMqChannel}
+     * It creates an ActiveMQ topic with the name '<event-name>-topic'
+     * or link to an existing one with that name.
+     *
+     * @param eventName the event name
+     * @throws JMSException
+     */
     public ActiveMqChannel(String eventName) throws JMSException {
         this(eventName, eventName+"-topic");
     }
 
+    /**
+     * Constructor for {@link ActiveMqChannel}
+     * It creates an ActiveMQ topic with the specified topic name
+     * or link to an existing one.
+     *
+     * @param eventName the event name
+     * @param topicName the ActiveMQ topic name
+     * @throws JMSException
+     */
     public ActiveMqChannel(String eventName, String topicName) throws JMSException {
         this.eventName = eventName;
         this.connection = connection(eventName);
@@ -44,7 +60,8 @@ public class ActiveMqChannel<T> implements Channel<T> {
     }
 
     /**
-     * Closes the JMS Session
+     * Closes the JMS Session.
+     *
      * @throws JMSException
      */
     public void closeSession() throws JMSException {
@@ -52,33 +69,66 @@ public class ActiveMqChannel<T> implements Channel<T> {
     }
 
     /**
-     * Closes the JMS Connection
+     * Closes the JMS Connection.
+     *
      * @throws JMSException
      */
     public void closeConnection() throws JMSException {
         this.connection.close();
     }
 
+    /**
+     * Returns the event name.
+     *
+     * @return the event name
+     */
     public String getEventName() {
         return this.eventName;
     }
 
+    /**
+     * Returns the connection.
+     *
+     * @return the connection
+     */
     public Connection getConnection() {
         return connection;
     }
 
+    /**
+     * Returns the ActiveMQ session.
+     *
+     * @return the ActiveMQ session
+     */
     public Session getSession() {
         return session;
     }
 
+    /**
+     * Returns the ActiveMQ topic.
+     *
+     * @return the ActiveMQ topic
+     */
     public Topic getTopic() {
         return topic;
     }
 
+    /**
+     * Returns the ActiveMQ topic name.
+     *
+     * @return the ActiveMQ topic name.
+     * @throws JMSException
+     */
     public String getTopicName() throws JMSException {
         return topic.getTopicName();
     }
 
+    /**
+     * Emits the notification in JSON String format.
+     *
+     * @param body the object to be sent as payload
+     * @throws NotificationException
+     */
     @Override
     public void issue(T body) throws NotificationException {
         if (body == null) throw new NotificationException("Body is null");
@@ -107,10 +157,6 @@ public class ActiveMqChannel<T> implements Channel<T> {
 
     private Session session(final Connection connection) throws JMSException {
         return connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-    }
-
-    public String id() {
-       return this.id();
     }
 
 }

@@ -9,6 +9,7 @@ import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.SnsClientBuilder;
 import software.amazon.awssdk.services.sns.model.*;
 
+import javax.naming.OperationNotSupportedException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -19,6 +20,7 @@ import java.net.URISyntaxException;
  * on a AWS Simple Notification Service (SNS).
  * It automatically creates an AWS SNS Topic (if it doesn't exist yet)
  * and publish the notification.
+ *
  * @param <T> the body of the message passed as a JSON String
  */
 public class SnsChannel<T> implements Channel<T> {
@@ -28,16 +30,55 @@ public class SnsChannel<T> implements Channel<T> {
     private String topicArn;
     private ObjectMapper mapper = new ObjectMapper();
 
-    public SnsChannel(String eventName) throws URISyntaxException {
-        this.eventName = eventName;
-        this.snsClient = snsClient();
-        this.topicArn = createSNSTopic(snsClient, eventName +"-sns");
+    private final static String SNS_CREATION_NOT_ALLOWED = "the application is not allowed to create a new AWS SNS topic";
+
+    /**
+     * Returns a new {@link SnsChannel}. It tries to create the AWS SNS topic
+     * (if the app has been allowed with the aws.enable.sns.create property set to 'true').
+     *
+     * @param eventName the name of the event to be sent on the channel
+     * @return the SnsChannel
+     * @throws URISyntaxException
+     * @throws OperationNotSupportedException
+     */
+    public static SnsChannel createProducer(String eventName) throws URISyntaxException, OperationNotSupportedException {
+        SnsClient snsClient = snsClient();
+        return new SnsChannel(eventName, snsClient(), createSNSTopic(snsClient, eventName +"-sns"));
     }
 
-    public String id() {
+    /**
+     * Returns a new {@link SnsChannel}.
+     *
+     * @param eventName the name of the event to be sent on the channel
+     * @param topicArn the existing topic arn to be attached to
+     * @return the SnsChannel
+     * @throws URISyntaxException
+     */
+    public static SnsChannel createProducer(String eventName, String topicArn) throws URISyntaxException {
+        return new SnsChannel(eventName, snsClient(), topicArn);
+    }
+
+    private SnsChannel(String eventName, SnsClient snsClient, String topicArn) {
+        this.eventName = eventName;
+        this.snsClient = snsClient;
+        this.topicArn = topicArn;
+    }
+
+    /**
+     * Returns the event name.
+     *
+     * @return the event name
+     */
+    public String getEventName() {
         return this.eventName;
     }
 
+    /**
+     * Issues the given object on the SNS channel.
+     *
+     * @param body the object to be sent as payload
+     * @throws NotificationException
+     */
     @Override
     public void issue(T body) throws NotificationException {
         if (body == null) throw new NotificationException("Body is null");
@@ -50,19 +91,25 @@ public class SnsChannel<T> implements Channel<T> {
         }
     }
 
+    /**
+     * Returns the SNS topic arn.
+     *
+     * @return the topic arn
+     */
     public String getTopicArn() {
         return this.topicArn;
     }
 
+    /**
+     * Returns the AWS SNS Client.
+     *
+     * @return the sns client
+     */
     public SnsClient getSnsClient() {
         return snsClient;
     }
 
-    public void setSnsClient(SnsClient snsClient) {
-        this.snsClient = snsClient;
-    }
-
-    private SnsClient snsClient() throws URISyntaxException {
+    private static SnsClient snsClient() throws URISyntaxException {
         SnsClientBuilder snsClientBuilder = SnsClient.builder();
         /* overrides the aws endpoint to the localstack endpoint (in place of the default AWS endpoint of the SnsClient)
            if the aws.endpoint property is specified in the application.properties file */
@@ -72,19 +119,18 @@ public class SnsChannel<T> implements Channel<T> {
         return snsClientBuilder.build();
     }
 
-    private String createSNSTopic(SnsClient snsClient, String topicName ) {
-        CreateTopicResponse result = null;
+    private static String createSNSTopic(SnsClient snsClient, String topicName) throws OperationNotSupportedException {
+        if (Boolean.FALSE.equals(Boolean.parseBoolean(Properties.get("aws.enable.sns.create")))) {
+            throw new OperationNotSupportedException(SNS_CREATION_NOT_ALLOWED);
+        }
         try {
             CreateTopicRequest request = CreateTopicRequest.builder()
                     .name(topicName)
                     .build();
-
-            result = snsClient.createTopic(request);
+            CreateTopicResponse result = snsClient.createTopic(request);
             return result.topicArn();
         } catch (SnsException e) {
-
             System.err.println(e.awsErrorDetails().errorMessage());
-            System.exit(1);
         }
         return "";
     }

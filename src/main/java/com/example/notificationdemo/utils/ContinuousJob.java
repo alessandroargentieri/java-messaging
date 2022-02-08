@@ -59,6 +59,7 @@ public abstract class ContinuousJob {
 
     /**
      * Sets the interval to wait until the next iteration of the Job.
+     *
      * @param interval the interval of time among the various cyclic executions
      */
     public void setInterval(long interval) {

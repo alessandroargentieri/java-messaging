@@ -12,7 +12,7 @@ import java.util.function.Consumer;
  * This class acts as a consumer for the {@link ActiveMqChannel}.
  * It creates a subscriber for the producer's topic by specifying the notification id and the topic name.
  * Every ActiveMqConsumer instance for a specific notification id has its own copy of the messages.
- * It can be started as a {@link Thread}
+ * It can be started as a {@link ContinuousJob}
  */
 public class ActiveMqConsumer extends ContinuousJob {
 
@@ -26,7 +26,13 @@ public class ActiveMqConsumer extends ContinuousJob {
 
     private static int clientIdIndex = -1;
 
-    /* This constructor instantiates a new connection, session and topic (it will link to the ActiveMQ existing one) */
+    /**
+     * Basic constructor for {@link ActiveMqConsumer}.
+     *
+     * @param eventName the event name
+     * @param topicName the ActiveMQ topic name
+     * @throws JMSException
+     */
     public ActiveMqConsumer(String eventName, String topicName) throws JMSException {
         this.eventName = eventName;
         this.connection = connection(eventName);
@@ -35,9 +41,15 @@ public class ActiveMqConsumer extends ContinuousJob {
         this.consumer = this.session.createConsumer(topic);
     }
 
-    /* This constructor reuses the connection, session and topic of a given producer */
+    /**
+     * Constructor for {@link ActiveMqConsumer}.
+     * It take advantage of an existing {@link ActiveMqChannel} to reuse connection, session and topic.
+     *
+     * @param producer the ActiveMqChannel
+     * @throws JMSException
+     */
     public ActiveMqConsumer(final ActiveMqChannel producer) throws JMSException {
-        this.eventName = producer.id();
+        this.eventName = producer.getEventName();
         this.connection = producer.getConnection();
         this.session = producer.getSession();
         this.topic = producer.getTopic();
@@ -45,7 +57,8 @@ public class ActiveMqConsumer extends ContinuousJob {
     }
 
     /**
-     * returns a text message (a JSON string if the message was a DTO) read from the topic
+     * Returns a text message (a JSON string if the message was a DTO) read from the topic.
+     *
      * @return received text message
      * @throws JMSException
      */
@@ -73,13 +86,17 @@ public class ActiveMqConsumer extends ContinuousJob {
     }
 
     /**
-     * returns the ActiveMq clientId of the consumer.
+     * Returns the ActiveMq clientId of the consumer.
+     *
      * @return the cliendId
      */
     public String getClientId() {
         return this.clientId;
     }
 
+    /**
+     * The job to be repeated at the various intervals.
+     */
     @Override
     public void doWork() {
         try {
@@ -95,6 +112,7 @@ public class ActiveMqConsumer extends ContinuousJob {
     /**
      * Starts listening and reacting to the messages.
      * Gets a {@link Consumer} to consume the read messages.
+     *
      * @param consumer the action to be performed on the read message
      */
     public void onReadStart(Consumer<String> consumer) {

@@ -10,7 +10,8 @@ import java.net.URL;
 import java.util.List;
 
 /**
- * This class implements a @{link Notification} through an HTTP/S call to an Endpoint.
+ * EndpointChannel class implements a {@link Channel} through an HTTP/S call to an Endpoint.
+ *
  * @param <T> the body of the message to be sent over HTTP/S.
  */
 public class EndpointChannel<T> implements Channel<T> {
@@ -21,6 +22,12 @@ public class EndpointChannel<T> implements Channel<T> {
         this.endpoint = endpoint;
     }
 
+    /**
+     * Emits the notification in JSON String format.
+     *
+     * @param body the object to be sent as payload
+     * @throws NotificationException
+     */
     @Override
     public void issue(T body) throws NotificationException {
         if (body == null) throw new NotificationException("Body is null");

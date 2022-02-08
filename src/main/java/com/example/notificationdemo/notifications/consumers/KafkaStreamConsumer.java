@@ -12,7 +12,7 @@ import java.util.Properties;
 import java.util.function.Consumer;
 
 /**
- * KafkaStreamConsumer is a consumer for the incoming Kafka messages. It can be started as a {@link Thread}.
+ * KafkaStreamConsumer is a consumer for the incoming Kafka messages. It can be started as a {@link ContinuousJob}.
  */
 public class KafkaStreamConsumer extends ContinuousJob {
 
@@ -24,7 +24,7 @@ public class KafkaStreamConsumer extends ContinuousJob {
 
     private static int consumerNumber = -1;
 
-    public static KafkaStreamConsumer createConsumer(String eventName, String topic) {
+    public static KafkaStreamConsumer create(String eventName, String topic) {
         consumerNumber++;
         return new KafkaStreamConsumer(eventName, eventName+"-consumer"+consumerNumber+"", topic);
     }

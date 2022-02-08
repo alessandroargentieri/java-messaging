@@ -3,9 +3,18 @@ package com.example.notificationdemo.controllers;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+/**
+ * Consumer class for the {@link com.example.notificationdemo.notifications.producers.EndpointChannel}.
+ */
 @org.springframework.web.bind.annotation.RestController
 public class RestController {
 
+    /**
+     * Callback API
+     *
+     * @param messageBody the API payload
+     * @return the response object acknoledgement
+     */
     @PostMapping("/callback")
     public String callbackAPI(@RequestBody String messageBody) {
         System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");

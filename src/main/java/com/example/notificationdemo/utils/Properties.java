@@ -18,8 +18,25 @@ import java.io.IOException;
 public class Properties {
 
     private static java.util.Properties prop;
-    private static final String PROPERTIES_FILE_PATH = "src/main/resources/application.properties";
+    private static String PROPERTIES_FILE_PATH = "src/main/resources/application.properties";
 
+    /**
+     * Overwrite the properties filepath.
+     *
+     * @param filePath the new filepath
+     */
+    public static void setPropertiesFilePath(String filePath) {
+        PROPERTIES_FILE_PATH = filePath;
+    }
+
+    /**
+     * Returns a property value by specifying its name.
+     * The property is fetched from "src/main/resources/application.properties"
+     * or from another source if specified.
+     *
+     * @param propertyName the name of the property to be read from file
+     * @return the value of the property
+     */
     public static String get(String propertyName) {
         if (prop == null) {
             try {
@@ -45,7 +62,7 @@ public class Properties {
         return prop.getProperty(propertyName);
     }
 
-    public static java.util.Properties readPropertiesFile(String fileName) throws IOException {
+    private static java.util.Properties readPropertiesFile(String fileName) throws IOException {
         FileInputStream fis = null;
         java.util.Properties prop = null;
         try {

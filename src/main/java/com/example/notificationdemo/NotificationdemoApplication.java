@@ -14,6 +14,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import software.amazon.awssdk.services.sqs.model.Message;
 
 import javax.jms.JMSException;
+import javax.naming.OperationNotSupportedException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -23,14 +24,14 @@ import java.util.concurrent.TimeoutException;
 @SpringBootApplication
 public class NotificationdemoApplication {
 
-	public static void main(String[] args) throws URISyntaxException, NotificationException, InterruptedException, IOException, TimeoutException, JMSException {
+	public static void main(String[] args) throws URISyntaxException, NotificationException, InterruptedException, IOException, TimeoutException, JMSException, OperationNotSupportedException {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SQS-SNS test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		SnsChannel<String> snsNotification = new SnsChannel<>("sns-sqs-test");
+		SnsChannel<String> snsNotification = SnsChannel.createProducer("sns-sqs-test");
 
-		SqsConsumer sqsConsumer0 = new SqsConsumer("sns-sqs-test", snsNotification.getTopicArn());
-		SqsConsumer sqsConsumer1 = new SqsConsumer("sns-sqs-test", snsNotification.getTopicArn());
+		SqsConsumer sqsConsumer0 = SqsConsumer.create("sns-sqs-test", snsNotification.getTopicArn());
+		SqsConsumer sqsConsumer1 = SqsConsumer.create("sns-sqs-test", snsNotification.getTopicArn());
 
 		sqsConsumer0.onReadStart(message -> consumeSqsMessage(sqsConsumer0, message));
 		sqsConsumer1.onReadStart(message -> consumeSqsMessage(sqsConsumer1, message));
@@ -39,10 +40,10 @@ public class NotificationdemoApplication {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ RabbitMQ test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		RabbitMqChannel<String> rabbitMqNotification = RabbitMqChannel.createProducer("rabbitmq-test");
+		RabbitMqChannel<String> rabbitMqNotification = RabbitMqChannel.create("rabbitmq-test");
 
-		RabbitMqConsumer rabbitMqConsumer1 = RabbitMqConsumer.createConsumer("rabbitmq-test", rabbitMqNotification.getExchange());
-		RabbitMqConsumer rabbitMqConsumer2 = RabbitMqConsumer.createConsumer("rabbitmq-test", rabbitMqNotification.getExchange());
+		RabbitMqConsumer rabbitMqConsumer1 = RabbitMqConsumer.create("rabbitmq-test", rabbitMqNotification.getExchange());
+		RabbitMqConsumer rabbitMqConsumer2 = RabbitMqConsumer.create("rabbitmq-test", rabbitMqNotification.getExchange());
 
 		DeliverCallback deliverCallback = (consumerTag, delivery) -> {
 			String message = new String(delivery.getBody(), "UTF-8");
@@ -71,8 +72,8 @@ public class NotificationdemoApplication {
 
 		KafkaChannel<String> kafkaNotification = new KafkaChannel<>("kafka-test");
 
-		KafkaStreamConsumer kafkaStreamConsumer0 = KafkaStreamConsumer.createConsumer("kafka-test", kafkaNotification.getTopic());
-		KafkaStreamConsumer kafkaStreamConsumer1 = KafkaStreamConsumer.createConsumer("kafka-test", kafkaNotification.getTopic());
+		KafkaStreamConsumer kafkaStreamConsumer0 = KafkaStreamConsumer.create("kafka-test", kafkaNotification.getTopic());
+		KafkaStreamConsumer kafkaStreamConsumer1 = KafkaStreamConsumer.create("kafka-test", kafkaNotification.getTopic());
 
 		kafkaStreamConsumer0.onReadStart(message -> consumeKafkaMessage(kafkaStreamConsumer0, message));
 		kafkaStreamConsumer1.onReadStart(message -> consumeKafkaMessage(kafkaStreamConsumer1, message));
@@ -81,7 +82,6 @@ public class NotificationdemoApplication {
 		kafkaNotification.issue("First message on Kafka");
 		kafkaNotification.issue("Second message on Kafka");
 		kafkaNotification.issue("Third message on Kafka");
-
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Endpoint test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -107,7 +107,7 @@ public class NotificationdemoApplication {
 
 	private static void consumeSqsMessage(SqsConsumer sqsConsumer, Message message) {
 		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-		System.out.println(String.format("Message received from SQS %s:", sqsConsumer.getQueue()));
+		System.out.println(String.format("Message received from SQS %s:", sqsConsumer.getQueueEndpoint()));
 		System.out.println(message.body());
 	}
 

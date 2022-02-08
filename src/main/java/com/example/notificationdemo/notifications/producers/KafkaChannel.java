@@ -5,7 +5,6 @@ import com.example.notificationdemo.notifications.NotificationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -16,6 +15,12 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * KafkaChannel class is the Kafka implementation for the {@link Channel} interface.
+ * It creates a topic or link to an existing one.
+ *
+ * @param <T> the payload object type issued
+ */
 public class KafkaChannel<T> implements Channel<T> {
 
     private final String eventName;
@@ -25,12 +30,23 @@ public class KafkaChannel<T> implements Channel<T> {
 
     private String kafkaUrl = String.format("%s:%s", com.example.notificationdemo.utils.Properties.get("kafka.host"), com.example.notificationdemo.utils.Properties.get("kafka.port"));
 
-
-
+    /**
+     * Basic constructor for {@link KafkaChannel}.
+     * It creates or link to a Kafka topic named '<event-name>-topic'.
+     *
+     * @param eventName the event name
+     */
     public KafkaChannel(String eventName) {
         this(eventName, eventName+"-topic");
     }
 
+    /**
+     * Constructor for {@link KafkaChannel}.
+     * It creates or link to the givem Kafka topic.
+     *
+     * @param eventName the event name
+     * @param topicName the Kafka topic name
+     */
     public KafkaChannel(String eventName, String topicName) {
         this.eventName = eventName;
         this.producer = initProducer();
@@ -64,6 +80,12 @@ public class KafkaChannel<T> implements Channel<T> {
         }
     }
 
+    /**
+     * Emits the notification in JSON String format.
+     *
+     * @param body the object to be sent as payload
+     * @throws NotificationException
+     */
     @Override
     public void issue(T body) throws NotificationException {
         if (body == null) throw new NotificationException("Body is null");
@@ -77,6 +99,11 @@ public class KafkaChannel<T> implements Channel<T> {
         }
     }
 
+    /**
+     * Returns the Kafka topic name.
+     *
+     * @return the Kafka topic name
+     */
     public String getTopic() {
         return topic;
     }
@@ -92,7 +119,7 @@ public class KafkaChannel<T> implements Channel<T> {
     }
 
     /**
-     * Closes the kafka producer.
+     * Closes the Kafka producer.
      */
     public void closeProducer() {
         this.producer.close();

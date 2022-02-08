@@ -15,6 +15,7 @@ import java.util.concurrent.TimeoutException;
  * on a RabbitMQ Exchange.
  * It automatically creates an Exchange (if it doesn't exist yet)
  * and publish the notification.
+ *
  * @param <T> the body of the message passed as a JSON String
  */
 public class RabbitMqChannel<T> implements Channel<T> {
@@ -27,30 +28,32 @@ public class RabbitMqChannel<T> implements Channel<T> {
     /**
      * Returns a new {@link RabbitMqChannel} by specifying the event name.
      * The class attempts creating a new exchange or attaching to an existing one
-     * with the name "<event-name>-exchange".
+     * named "<event-name>-exchange".
+     *
      * @param eventName the event name
      * @return the RabbitMqChannel
      * @throws IOException
      * @throws TimeoutException
      */
-    public static RabbitMqChannel createProducer(String eventName) throws IOException, TimeoutException {
-        return RabbitMqChannel.createProducer(eventName, eventName+"-exchange");
+    public static RabbitMqChannel create(String eventName) throws IOException, TimeoutException {
+        return RabbitMqChannel.create(eventName, eventName+"-exchange");
     }
 
     /**
      * Returns a new {@link RabbitMqChannel} by specifying the event name and the exchange name.
      * The class attempts creating a new exchange or attaching to an existing one.
+     *
      * @param eventName the event name
      * @param exchangeName the exchange name
      * @return the RabbitMqChannel
      * @throws IOException
      * @throws TimeoutException
      */
-    public static RabbitMqChannel createProducer(String eventName, String exchangeName) throws IOException, TimeoutException {
+    public static RabbitMqChannel create(String eventName, String exchangeName) throws IOException, TimeoutException {
         return new RabbitMqChannel(eventName, exchangeName, channel());
     }
 
-    private RabbitMqChannel(String eventName, String exchangeName, final com.rabbitmq.client.Channel channel) throws IOException, TimeoutException {
+    private RabbitMqChannel(String eventName, String exchangeName, final com.rabbitmq.client.Channel channel) throws IOException {
         this.eventName = eventName;
         this.channel = channel;
         this.exchange = exchangeName;
@@ -61,6 +64,7 @@ public class RabbitMqChannel<T> implements Channel<T> {
 
     /**
      * Returns the exchange name.
+     *
      * @return the exchange name
      */
     public String getExchange() {
@@ -69,6 +73,7 @@ public class RabbitMqChannel<T> implements Channel<T> {
 
     /**
      * Returns the {@link com.rabbitmq.client.Channel}
+     *
      * @return the rabbitmq channel
      */
     public com.rabbitmq.client.Channel getChannel() {
@@ -92,6 +97,7 @@ public class RabbitMqChannel<T> implements Channel<T> {
 
     /**
      * Returns the event name.
+     *
      * @return the event name
      */
     public String getEventName() {

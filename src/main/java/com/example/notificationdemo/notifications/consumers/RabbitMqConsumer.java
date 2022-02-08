@@ -21,22 +21,60 @@ public class RabbitMqConsumer {
     private String exchange;
     private static int queueNumber = -1;
 
-    public static RabbitMqConsumer createConsumer(String eventName, String exchangeName) throws IOException, TimeoutException {
+    /**
+     * Returns an instance of {@link RabbitMqConsumer}.
+     * It links to or create a RabbitMQ queue named '<event-name>-queue'.
+     *
+     * @param eventName the event name
+     * @param exchangeName the RabbitMQ exchange name
+     * @return the RabbitMqConsumer
+     * @throws IOException
+     * @throws TimeoutException
+     */
+    public static RabbitMqConsumer create(String eventName, String exchangeName) throws IOException, TimeoutException {
         queueNumber++;
-        return RabbitMqConsumer.createConsumer(eventName, exchangeName, eventName+"-queue"+queueNumber+"");
+        return RabbitMqConsumer.create(eventName, exchangeName, eventName+"-queue"+queueNumber+"");
     }
 
-    public static RabbitMqConsumer createConsumer(String eventName, String exchangeName, String queueName) throws IOException, TimeoutException {
+    /**
+     * Returns an instance of {@link RabbitMqConsumer}.
+     * It links to the given RabbitMQ queue.
+     *
+     * @param eventName the event name
+     * @param exchangeName the RabbitMQ exchange name
+     * @param queueName the RabbitMQ queue name
+     * @return the RabbitMqConsumer
+     * @throws IOException
+     * @throws TimeoutException
+     */
+    public static RabbitMqConsumer create(String eventName, String exchangeName, String queueName) throws IOException, TimeoutException {
         return new RabbitMqConsumer(eventName, exchangeName, queueName, channel());
     }
 
-    // when used in the same application we can reuse the channel and get the input data from a given notification producer
+    /**
+     * Returns an instance of {@link RabbitMqConsumer} from the given {@link RabbitMqChannel}.
+     * It links to or create a RabbitMq queue named '<event-name>-queue'.
+     *
+     * @param producer the instance of {@link RabbitMqChannel}
+     * @return the RabbitMqConsumer
+     * @throws IOException
+     */
     public static RabbitMqConsumer createConsumerFromProducer(final RabbitMqChannel producer) throws IOException {
         queueNumber++;
         return RabbitMqConsumer.createConsumerFromProducer(producer, producer.getEventName()+"-queue"+queueNumber+"");
     }
 
     // when used in the same application we can reuse the channel and get the input data from a given notification producer
+
+    /**
+     * Returns an instance of {@link RabbitMqConsumer} from the given {@link RabbitMqChannel}.
+     * It links to or create a RabbitMq queue with the given name.
+     *
+     * @param producer the instance of {@link RabbitMqChannel}
+     * @param queueName the name of a RabbitMQ queue to link to, or to create
+     * @return the RabbitMqConsumer
+     * @throws IOException
+     */
     public static RabbitMqConsumer createConsumerFromProducer(final RabbitMqChannel producer, String queueName) throws IOException {
         return new RabbitMqConsumer(producer.getEventName(), producer.getExchange(), queueName, producer.getChannel());
     }
@@ -70,7 +108,8 @@ public class RabbitMqConsumer {
     }
 
     /**
-     * Registers a callback when a new message is received in the queue
+     * Registers a callback when a new message is received in the queue.
+     *
      * @param deliverCallback the action that must be performed at the reading of a new message from the queue
      * @throws IOException
      */
