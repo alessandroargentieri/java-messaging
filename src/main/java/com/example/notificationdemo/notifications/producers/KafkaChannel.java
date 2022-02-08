@@ -23,19 +23,26 @@ public class KafkaChannel<T> implements Channel<T> {
     private KafkaProducer<String, String> producer;
     private ObjectMapper mapper = new ObjectMapper();
 
+    private String kafkaUrl = String.format("%s:%s", com.example.notificationdemo.utils.Properties.get("kafka.host"), com.example.notificationdemo.utils.Properties.get("kafka.port"));
+
+
+
     public KafkaChannel(String eventName) {
-        this.eventName = eventName;
-        this.producer = initProducer();
-        this.topic = topic(eventName);
+        this(eventName, eventName+"-topic");
     }
 
-    private String topic(String id) {
-        String topic = id+"-topic";
+    public KafkaChannel(String eventName, String topicName) {
+        this.eventName = eventName;
+        this.producer = initProducer();
+        this.topic = topicName;
+        if (Boolean.TRUE.equals(com.example.notificationdemo.utils.Properties.get("kafka.enable.topic.create"))) {
+            // only if a specific flag is enabled the application has the priviledges to create a topic
+            // else it must be attached to the topicName resource specified which already exists
+            createTopic(topicName);
+        }
+    }
 
-        String kafkaUrl = String.format("%s:%s",
-                com.example.notificationdemo.utils.Properties.get("kafka.host"),
-                com.example.notificationdemo.utils.Properties.get("kafka.port"));
-
+    private void createTopic(String topicName) {
         int maxIdleConn = Integer.parseInt(com.example.notificationdemo.utils.Properties.get("kafka.connection.max_idle"));
         int reqTimeout = Integer.parseInt(com.example.notificationdemo.utils.Properties.get("kafka.request.timeout"));
         int numPartitions = Integer.parseInt(com.example.notificationdemo.utils.Properties.get("kafka.topic.num_partitions"));
@@ -48,13 +55,13 @@ public class KafkaChannel<T> implements Channel<T> {
         props.put(ProducerConfig.CONNECTIONS_MAX_IDLE_MS_CONFIG, maxIdleConn);
         props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, reqTimeout);
         try (AdminClient client = AdminClient.create(props)) {
-            if (client.listTopics().names().get().stream().anyMatch(t -> topic.equals(t))) return topic;
-            CreateTopicsResult result = client.createTopics(Arrays.asList(new NewTopic(topic, numPartitions, numReplications)));
+            // return if topic already exists
+            if (client.listTopics().names().get().stream().anyMatch(t -> topicName.equals(t))) return;
+            // create otherwise
+            client.createTopics(Arrays.asList(new NewTopic(topicName, numPartitions, numReplications)));
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
-            return null;
         }
-        return topic;
     }
 
     @Override
@@ -75,9 +82,6 @@ public class KafkaChannel<T> implements Channel<T> {
     }
 
     private KafkaProducer<String, String> initProducer() {
-        String kafkaUrl = String.format("%s:%s",
-                com.example.notificationdemo.utils.Properties.get("kafka.host"),
-                com.example.notificationdemo.utils.Properties.get("kafka.port"));
 
         Properties props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaUrl);

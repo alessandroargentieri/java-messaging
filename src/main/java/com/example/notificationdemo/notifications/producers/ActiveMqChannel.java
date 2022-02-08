@@ -28,11 +28,17 @@ public class ActiveMqChannel<T> implements Channel<T> {
 
     private static int clientIdIndex = 0;
 
+
+
     public ActiveMqChannel(String eventName) throws JMSException {
+        this(eventName, eventName+"-topic");
+    }
+
+    public ActiveMqChannel(String eventName, String topicName) throws JMSException {
         this.eventName = eventName;
         this.connection = connection(eventName);
         this.session = session(this.connection);
-        this.topicName = eventName +"-topic";
+        this.topicName = topicName;
         this.topic = this.session.createTopic(this.topicName);
         this.producer = session.createProducer(topic);
     }
