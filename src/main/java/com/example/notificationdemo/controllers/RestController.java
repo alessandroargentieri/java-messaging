@@ -1,10 +1,11 @@
 package com.example.notificationdemo.controllers;
 
+import com.example.notificationdemo.notifications.producers.EndpointEventProducer;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 /**
- * Consumer class for the {@link com.example.notificationdemo.notifications.producers.EndpointChannel}.
+ * Consumer class for the {@link EndpointEventProducer}.
  */
 @org.springframework.web.bind.annotation.RestController
 public class RestController {

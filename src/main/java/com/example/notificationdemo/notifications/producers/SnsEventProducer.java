@@ -1,6 +1,6 @@
 package com.example.notificationdemo.notifications.producers;
 
-import com.example.notificationdemo.notifications.Channel;
+import com.example.notificationdemo.notifications.EventProducer;
 import com.example.notificationdemo.notifications.NotificationException;
 import com.example.notificationdemo.utils.Properties;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -16,14 +16,14 @@ import java.net.URISyntaxException;
 // https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/examples-simple-notification-service.html
 
 /**
- * This class emits a {@link Channel} by publishing a message
+ * This class emits a {@link EventProducer} by publishing a message
  * on a AWS Simple Notification Service (SNS).
  * It automatically creates an AWS SNS Topic (if it doesn't exist yet)
  * and publish the notification.
  *
  * @param <T> the body of the message passed as a JSON String
  */
-public class SnsChannel<T> implements Channel<T> {
+public class SnsEventProducer<T> implements EventProducer<T> {
 
     private final String eventName;
     private SnsClient snsClient;
@@ -33,7 +33,7 @@ public class SnsChannel<T> implements Channel<T> {
     private final static String SNS_CREATION_NOT_ALLOWED = "the application is not allowed to create a new AWS SNS topic";
 
     /**
-     * Returns a new {@link SnsChannel}. It tries to create the AWS SNS topic
+     * Returns a new {@link SnsEventProducer}. It tries to create the AWS SNS topic
      * (if the app has been allowed with the aws.enable.sns.create property set to 'true').
      *
      * @param eventName the name of the event to be sent on the channel
@@ -41,24 +41,24 @@ public class SnsChannel<T> implements Channel<T> {
      * @throws URISyntaxException
      * @throws OperationNotSupportedException
      */
-    public static SnsChannel createProducer(String eventName) throws URISyntaxException, OperationNotSupportedException {
+    public static SnsEventProducer createProducer(String eventName) throws URISyntaxException, OperationNotSupportedException {
         SnsClient snsClient = snsClient();
-        return new SnsChannel(eventName, snsClient(), createSNSTopic(snsClient, eventName +"-sns"));
+        return new SnsEventProducer(eventName, snsClient(), createSNSTopic(snsClient, eventName +"-sns"));
     }
 
     /**
-     * Returns a new {@link SnsChannel}.
+     * Returns a new {@link SnsEventProducer}.
      *
      * @param eventName the name of the event to be sent on the channel
      * @param topicArn the existing topic arn to be attached to
      * @return the SnsChannel
      * @throws URISyntaxException
      */
-    public static SnsChannel createProducer(String eventName, String topicArn) throws URISyntaxException {
-        return new SnsChannel(eventName, snsClient(), topicArn);
+    public static SnsEventProducer createProducer(String eventName, String topicArn) throws URISyntaxException {
+        return new SnsEventProducer(eventName, snsClient(), topicArn);
     }
 
-    private SnsChannel(String eventName, SnsClient snsClient, String topicArn) {
+    private SnsEventProducer(String eventName, SnsClient snsClient, String topicArn) {
         this.eventName = eventName;
         this.snsClient = snsClient;
         this.topicArn = topicArn;

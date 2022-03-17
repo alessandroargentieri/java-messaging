@@ -1,9 +1,9 @@
 package com.example.notificationdemo;
 
-import com.example.notificationdemo.notifications.Channel;
+import com.example.notificationdemo.notifications.EventProducer;
 import com.example.notificationdemo.notifications.NotificationException;
 import com.example.notificationdemo.notifications.consumers.ActiveMqConsumer;
-import com.example.notificationdemo.notifications.consumers.KafkaStreamConsumer;
+import com.example.notificationdemo.notifications.consumers.KafkaEventConsumer;
 import com.example.notificationdemo.notifications.consumers.RabbitMqConsumer;
 import com.example.notificationdemo.notifications.consumers.SqsConsumer;
 import com.example.notificationdemo.notifications.producers.*;
@@ -28,22 +28,22 @@ public class NotificationdemoApplication {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SQS-SNS test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		SnsChannel<String> snsNotification = SnsChannel.createProducer("sns-sqs-test");
+		SnsEventProducer<String> snsProducer = SnsEventProducer.createProducer("sns-sqs-test");
 
-		SqsConsumer sqsConsumer0 = SqsConsumer.create("sns-sqs-test", snsNotification.getTopicArn());
-		SqsConsumer sqsConsumer1 = SqsConsumer.create("sns-sqs-test", snsNotification.getTopicArn());
+		SqsConsumer sqsConsumer0 = SqsConsumer.create("sns-sqs-test", snsProducer.getTopicArn());
+		SqsConsumer sqsConsumer1 = SqsConsumer.create("sns-sqs-test", snsProducer.getTopicArn());
 
 		sqsConsumer0.onReadStart(message -> consumeSqsMessage(sqsConsumer0, message));
 		sqsConsumer1.onReadStart(message -> consumeSqsMessage(sqsConsumer1, message));
 
-		snsNotification.issue("Get the message?");
+		snsProducer.issue("Get the message?");
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ RabbitMQ test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		RabbitMqChannel<String> rabbitMqNotification = RabbitMqChannel.create("rabbitmq-test");
+		RabbitMqEventProducer<String> rabbitMqProducer = RabbitMqEventProducer.create("rabbitmq-test");
 
-		RabbitMqConsumer rabbitMqConsumer1 = RabbitMqConsumer.create("rabbitmq-test", rabbitMqNotification.getExchange());
-		RabbitMqConsumer rabbitMqConsumer2 = RabbitMqConsumer.create("rabbitmq-test", rabbitMqNotification.getExchange());
+		RabbitMqConsumer rabbitMqConsumer1 = RabbitMqConsumer.create("rabbitmq-test", rabbitMqProducer.getExchange());
+		RabbitMqConsumer rabbitMqConsumer2 = RabbitMqConsumer.create("rabbitmq-test", rabbitMqProducer.getExchange());
 
 		DeliverCallback deliverCallback = (consumerTag, delivery) -> {
 			String message = new String(delivery.getBody(), "UTF-8");
@@ -54,46 +54,46 @@ public class NotificationdemoApplication {
 		rabbitMqConsumer1.onReadMessage(deliverCallback);
 		rabbitMqConsumer2.onReadMessage(deliverCallback);
 
-		rabbitMqNotification.issue("Will you get this message?");
+		rabbitMqProducer.issue("Will you get this message?");
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ActiveMQ test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		ActiveMqChannel<String> activeMqNotification = new ActiveMqChannel<>("activemq-test");
+		ActiveMqEventProducer<String> activeMqProducer = new ActiveMqEventProducer<>("activemq-test");
 
-		ActiveMqConsumer activeMqConsumer0 = new ActiveMqConsumer("activemq-test", activeMqNotification.getTopicName());
-		ActiveMqConsumer activeMqConsumer1 = new ActiveMqConsumer("activemq-test", activeMqNotification.getTopicName());
+		ActiveMqConsumer activeMqConsumer0 = new ActiveMqConsumer("activemq-test", activeMqProducer.getTopicName());
+		ActiveMqConsumer activeMqConsumer1 = new ActiveMqConsumer("activemq-test", activeMqProducer.getTopicName());
 
 		activeMqConsumer0.onReadStart(message -> consumeActiveMqMessage(activeMqConsumer0, message));
 		activeMqConsumer1.onReadStart(message -> consumeActiveMqMessage(activeMqConsumer1, message));
 
-		activeMqNotification.issue("Hey u, d'ya get the message?");
+		activeMqProducer.issue("Hey u, d'ya get the message?");
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Kafka test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		KafkaChannel<String> kafkaNotification = new KafkaChannel<>("kafka-test");
+		KafkaEventProducer<String> kafkaProducer = new KafkaEventProducer<>("kafka-test");
 
-		KafkaStreamConsumer kafkaStreamConsumer0 = KafkaStreamConsumer.create("kafka-test", kafkaNotification.getTopic());
-		KafkaStreamConsumer kafkaStreamConsumer1 = KafkaStreamConsumer.create("kafka-test", kafkaNotification.getTopic());
+		KafkaEventConsumer kafkaConsumer0 = KafkaEventConsumer.create("kafka-test", kafkaProducer.getTopic());
+		KafkaEventConsumer kafkaConsumer1 = KafkaEventConsumer.create("kafka-test", kafkaProducer.getTopic());
 
-		kafkaStreamConsumer0.onReadStart(message -> consumeKafkaMessage(kafkaStreamConsumer0, message));
-		kafkaStreamConsumer1.onReadStart(message -> consumeKafkaMessage(kafkaStreamConsumer1, message));
+		kafkaConsumer0.onReadStart(message -> consumeKafkaMessage(kafkaConsumer0, message));
+		kafkaConsumer1.onReadStart(message -> consumeKafkaMessage(kafkaConsumer1, message));
 
 		Thread.sleep(20000);
-		kafkaNotification.issue("First message on Kafka");
-		kafkaNotification.issue("Second message on Kafka");
-		kafkaNotification.issue("Third message on Kafka");
+		kafkaProducer.issue("First message on Kafka");
+		kafkaProducer.issue("Second message on Kafka");
+		kafkaProducer.issue("Third message on Kafka");
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Endpoint test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		EndpointChannel.Endpoint endpoint = new EndpointChannel.Endpoint(new URL("http://localhost:8080/callback"));
-		Channel<String> endpointChannel = new EndpointChannel<>(endpoint);
+		EndpointEventProducer.Endpoint endpoint = new EndpointEventProducer.Endpoint(new URL("http://localhost:8080/callback"));
+		EventProducer<String> endpointEventProducer = new EndpointEventProducer<>(endpoint);
 
 		Executors.newSingleThreadExecutor().submit(
 				() -> {
 					try {
 						// let's wait 10s so the RestController bean is instantiated
 						Thread.sleep(10000);
-						endpointChannel.issue("Here is the message!");
+						endpointEventProducer.issue("Here is the message!");
 					} catch (InterruptedException | NotificationException e) {
 						e.printStackTrace();
 					}
@@ -116,9 +116,9 @@ public class NotificationdemoApplication {
 		System.out.println(String.format("ActiveMQ message received from clientId %s: %s", activeMqConsumer.getClientId(), message));
 	}
 
-	private static void consumeKafkaMessage(KafkaStreamConsumer kafkaStreamConsumer, ConsumerRecord<String, String> record) {
+	private static void consumeKafkaMessage(KafkaEventConsumer kafkaEventConsumer, ConsumerRecord<String, String> record) {
 		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-		System.out.println("Kafka consumer " + kafkaStreamConsumer.getConsumerName() + " - received message: (" + record.key() + ", " + record.value() + ") at offset " + record.offset());
+		System.out.println("Kafka consumer " + kafkaEventConsumer.getConsumerName() + " - received message: (" + record.key() + ", " + record.value() + ") at offset " + record.offset());
 	}
 
 

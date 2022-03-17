@@ -1,6 +1,6 @@
 package com.example.notificationdemo.notifications.producers;
 
-import com.example.notificationdemo.notifications.Channel;
+import com.example.notificationdemo.notifications.EventProducer;
 import com.example.notificationdemo.notifications.NotificationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,12 +16,12 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 /**
- * KafkaChannel class is the Kafka implementation for the {@link Channel} interface.
+ * KafkaChannel class is the Kafka implementation for the {@link EventProducer} interface.
  * It creates a topic or link to an existing one.
  *
  * @param <T> the payload object type issued
  */
-public class KafkaChannel<T> implements Channel<T> {
+public class KafkaEventProducer<T> implements EventProducer<T> {
 
     private final String eventName;
     private String topic;
@@ -31,23 +31,23 @@ public class KafkaChannel<T> implements Channel<T> {
     private String kafkaUrl = String.format("%s:%s", com.example.notificationdemo.utils.Properties.get("kafka.host"), com.example.notificationdemo.utils.Properties.get("kafka.port"));
 
     /**
-     * Basic constructor for {@link KafkaChannel}.
+     * Basic constructor for {@link KafkaEventProducer}.
      * It creates or link to a Kafka topic named '<event-name>-topic'.
      *
      * @param eventName the event name
      */
-    public KafkaChannel(String eventName) {
+    public KafkaEventProducer(String eventName) {
         this(eventName, eventName+"-topic");
     }
 
     /**
-     * Constructor for {@link KafkaChannel}.
+     * Constructor for {@link KafkaEventProducer}.
      * It creates or link to the givem Kafka topic.
      *
      * @param eventName the event name
      * @param topicName the Kafka topic name
      */
-    public KafkaChannel(String eventName, String topicName) {
+    public KafkaEventProducer(String eventName, String topicName) {
         this.eventName = eventName;
         this.producer = initProducer();
         this.topic = topicName;

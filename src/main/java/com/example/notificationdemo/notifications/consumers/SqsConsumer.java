@@ -1,6 +1,6 @@
 package com.example.notificationdemo.notifications.consumers;
 
-import com.example.notificationdemo.notifications.producers.SnsChannel;
+import com.example.notificationdemo.notifications.producers.SnsEventProducer;
 import com.example.notificationdemo.utils.ContinuousJob;
 import com.example.notificationdemo.utils.Properties;
 import software.amazon.awssdk.services.sns.SnsClient;
@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * This class acts as a consumer for the {@link SnsChannel}.
+ * This class acts as a consumer for the {@link SnsEventProducer}.
  * It creates a queue by specifying the notification id and the topicArn of the related AWS SNS service.
  * The new queue is then subscribed to the given SNS Topic in order to receive and buffer all the incoming messages.
  * Every SqsConsumer instance for a specific notification id has its own copy of the messages.
@@ -69,7 +69,7 @@ public class SqsConsumer extends ContinuousJob {
     }
 
     /**
-     * Creates a new instance of a {@link SqsConsumer} from a given {@link SnsChannel}
+     * Creates a new instance of a {@link SqsConsumer} from a given {@link SnsEventProducer}
      * It tries to create a new SQS queue
      * (if the app has been allowed with the aws.enable.sqs.create property set to 'true').
      * The queue is subscribed to the SNS topic fetched from given the SnsChannel.
@@ -79,7 +79,7 @@ public class SqsConsumer extends ContinuousJob {
      * @throws URISyntaxException
      * @throws OperationNotSupportedException
      */
-    public static SqsConsumer createFromProducer(final SnsChannel snsChannel) throws URISyntaxException, OperationNotSupportedException {
+    public static SqsConsumer createFromProducer(final SnsEventProducer snsChannel) throws URISyntaxException, OperationNotSupportedException {
         queueNumber++;
         SqsClient sqsClient = sqsClient();
         String sqsEndpoint = createQueue(sqsClient, snsChannel.getEventName()+"-sqs"+queueNumber+"");
@@ -87,7 +87,7 @@ public class SqsConsumer extends ContinuousJob {
     }
 
     /**
-     * Creates a new instance of a {@link SqsConsumer} from a given {@link SnsChannel}
+     * Creates a new instance of a {@link SqsConsumer} from a given {@link SnsEventProducer}
      * The queue is subscribed to the SNS topic fetched from the given SnsChannel.
      *
      * @param snsChannel the producer element from which to initialize the consumer
@@ -96,7 +96,7 @@ public class SqsConsumer extends ContinuousJob {
      * @throws URISyntaxException
      * @throws OperationNotSupportedException
      */
-    public static SqsConsumer createFromProducer(final SnsChannel snsChannel, String sqsEndpoint) throws URISyntaxException, OperationNotSupportedException {
+    public static SqsConsumer createFromProducer(final SnsEventProducer snsChannel, String sqsEndpoint) throws URISyntaxException, OperationNotSupportedException {
         SqsClient sqsClient = sqsClient();
         return new SqsConsumer(snsChannel.getEventName(), snsChannel.getSnsClient(), sqsClient(), snsChannel.getTopicArn(), sqsEndpoint);
     }

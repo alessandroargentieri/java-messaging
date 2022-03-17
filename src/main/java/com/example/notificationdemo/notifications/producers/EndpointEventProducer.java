@@ -1,6 +1,6 @@
 package com.example.notificationdemo.notifications.producers;
 
-import com.example.notificationdemo.notifications.Channel;
+import com.example.notificationdemo.notifications.EventProducer;
 import com.example.notificationdemo.notifications.NotificationException;
 import org.apache.http.Header;
 import org.springframework.http.HttpMethod;
@@ -10,15 +10,15 @@ import java.net.URL;
 import java.util.List;
 
 /**
- * EndpointChannel class implements a {@link Channel} through an HTTP/S call to an Endpoint.
+ * EndpointChannel class implements a {@link EventProducer} through an HTTP/S call to an Endpoint.
  *
  * @param <T> the body of the message to be sent over HTTP/S.
  */
-public class EndpointChannel<T> implements Channel<T> {
+public class EndpointEventProducer<T> implements EventProducer<T> {
 
     private Endpoint endpoint;
 
-    public EndpointChannel(final Endpoint endpoint) {
+    public EndpointEventProducer(final Endpoint endpoint) {
         this.endpoint = endpoint;
     }
 

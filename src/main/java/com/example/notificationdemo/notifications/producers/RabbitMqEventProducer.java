@@ -1,6 +1,6 @@
 package com.example.notificationdemo.notifications.producers;
 
-import com.example.notificationdemo.notifications.Channel;
+import com.example.notificationdemo.notifications.EventProducer;
 import com.example.notificationdemo.notifications.NotificationException;
 import com.example.notificationdemo.utils.Properties;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,14 +11,14 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 /**
- * This class emits a {@link Channel} by publishing a message
+ * This class emits a {@link EventProducer} by publishing a message
  * on a RabbitMQ Exchange.
  * It automatically creates an Exchange (if it doesn't exist yet)
  * and publish the notification.
  *
  * @param <T> the body of the message passed as a JSON String
  */
-public class RabbitMqChannel<T> implements Channel<T> {
+public class RabbitMqEventProducer<T> implements EventProducer<T> {
 
     private final String eventName;
     private String exchange;
@@ -26,7 +26,7 @@ public class RabbitMqChannel<T> implements Channel<T> {
     private ObjectMapper mapper = new ObjectMapper();
 
     /**
-     * Returns a new {@link RabbitMqChannel} by specifying the event name.
+     * Returns a new {@link RabbitMqEventProducer} by specifying the event name.
      * The class attempts creating a new exchange or attaching to an existing one
      * named "<event-name>-exchange".
      *
@@ -35,12 +35,12 @@ public class RabbitMqChannel<T> implements Channel<T> {
      * @throws IOException
      * @throws TimeoutException
      */
-    public static RabbitMqChannel create(String eventName) throws IOException, TimeoutException {
-        return RabbitMqChannel.create(eventName, eventName+"-exchange");
+    public static RabbitMqEventProducer create(String eventName) throws IOException, TimeoutException {
+        return RabbitMqEventProducer.create(eventName, eventName+"-exchange");
     }
 
     /**
-     * Returns a new {@link RabbitMqChannel} by specifying the event name and the exchange name.
+     * Returns a new {@link RabbitMqEventProducer} by specifying the event name and the exchange name.
      * The class attempts creating a new exchange or attaching to an existing one.
      *
      * @param eventName the event name
@@ -49,11 +49,11 @@ public class RabbitMqChannel<T> implements Channel<T> {
      * @throws IOException
      * @throws TimeoutException
      */
-    public static RabbitMqChannel create(String eventName, String exchangeName) throws IOException, TimeoutException {
-        return new RabbitMqChannel(eventName, exchangeName, channel());
+    public static RabbitMqEventProducer create(String eventName, String exchangeName) throws IOException, TimeoutException {
+        return new RabbitMqEventProducer(eventName, exchangeName, channel());
     }
 
-    private RabbitMqChannel(String eventName, String exchangeName, final com.rabbitmq.client.Channel channel) throws IOException {
+    private RabbitMqEventProducer(String eventName, String exchangeName, final com.rabbitmq.client.Channel channel) throws IOException {
         this.eventName = eventName;
         this.channel = channel;
         this.exchange = exchangeName;

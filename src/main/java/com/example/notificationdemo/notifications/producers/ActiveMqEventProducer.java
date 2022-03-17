@@ -1,6 +1,6 @@
 package com.example.notificationdemo.notifications.producers;
 
-import com.example.notificationdemo.notifications.Channel;
+import com.example.notificationdemo.notifications.EventProducer;
 import com.example.notificationdemo.notifications.NotificationException;
 import com.example.notificationdemo.utils.Properties;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -10,14 +10,14 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import javax.jms.*;
 
 /**
- * ActiveMqChannel class implements a {@link Channel} by publishing a message
+ * ActiveMqChannel class implements a {@link EventProducer} by publishing a message
  * on a ActiveMQ topic.
  * It automatically creates a topic (if it doesn't exist yet)
  * and publish the notification.
  *
  * @param <T> the body of the message passed as a JSON String
  */
-public class ActiveMqChannel<T> implements Channel<T> {
+public class ActiveMqEventProducer<T> implements EventProducer<T> {
 
     private final String eventName;
     private String topicName;
@@ -30,19 +30,19 @@ public class ActiveMqChannel<T> implements Channel<T> {
     private static int clientIdIndex = 0;
 
     /**
-     * Basic constructor for {@link ActiveMqChannel}
+     * Basic constructor for {@link ActiveMqEventProducer}
      * It creates an ActiveMQ topic with the name '<event-name>-topic'
      * or link to an existing one with that name.
      *
      * @param eventName the event name
      * @throws JMSException
      */
-    public ActiveMqChannel(String eventName) throws JMSException {
+    public ActiveMqEventProducer(String eventName) throws JMSException {
         this(eventName, eventName+"-topic");
     }
 
     /**
-     * Constructor for {@link ActiveMqChannel}
+     * Constructor for {@link ActiveMqEventProducer}
      * It creates an ActiveMQ topic with the specified topic name
      * or link to an existing one.
      *
@@ -50,7 +50,7 @@ public class ActiveMqChannel<T> implements Channel<T> {
      * @param topicName the ActiveMQ topic name
      * @throws JMSException
      */
-    public ActiveMqChannel(String eventName, String topicName) throws JMSException {
+    public ActiveMqEventProducer(String eventName, String topicName) throws JMSException {
         this.eventName = eventName;
         this.connection = connection(eventName);
         this.session = session(this.connection);
