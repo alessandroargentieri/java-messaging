@@ -140,4 +140,56 @@ aws --endpoint-url=http://localhost:4566 sqs receive-message --queue-url http://
 
 ### delete queue
 aws --endpoint-url=http://localhost:4566 sqs delete-queue --queue-url http://localhost:4566/000000000000/myqueue001
+
+# AWS Secrets Manager
+
+# list all secrets
+aws --endpoint-url=http://localhost:4566 secretsmanager list-secrets
+
+# create new secret
+aws --endpoint-url=http://localhost:4566 secretsmanager create-secret --name jason \
+    --description "This is the password for dev-db admin user1" \
+    --secret-string "MySecretSecureString$123" \
+    --tags "Key=Environment,Value=Development"
+
+# add tags to an existing secret
+aws --endpoint-url=http://localhost:4566 secretsmanager tag-resource --secret-id jason \
+  --tags '[{"Key": "Name", "Value": "Jason"}, {"Key": "Role", "Value": "Admin"}]'
+
+# untag a specific secret
+aws --endpoint-url=http://localhost:4566 secretsmanager untag-resource --secret-id jason \
+--tag-keys '[ "Environment", "Name"]'
+
+# get the secret value given its name
+aws --endpoint-url=http://localhost:4566 secretsmanager get-secret-value --secret-id jason
+
+# describe a secret given its name
+aws --endpoint-url=http://localhost:4566 secretsmanager describe-secret --secret-id jason
+
+# delete a secret by its name (you can recover it within 30 days)
+aws --endpoint-url=http://localhost:4566 secretsmanager delete-secret --secret-id jason
+
+# delete a secret by its name specifying the recovery window
+aws --endpoint-url=http://localhost:4566 secretsmanager delete-secret --secret-id jason --recovery-window-in-days 21
+
+# recover a deleted secret given its name
+aws --endpoint-url=http://localhost:4566 secretsmanager restore-secret --secret-id jason
+
+# update a secret description by its name
+aws --endpoint-url=http://localhost:4566 secretsmanager update-secret --secret-id jason \
+    --description "This is the password for dev-db admin user"
+
+# update a secret value by its name
+aws --endpoint-url=http://localhost:4566 secretsmanager update-secret --secret-id jason \
+    --secret-string "NewlyUpdatedSecret#"
+
+# list of all temporal versions of a given secret
+aws --endpoint-url=http://localhost:4566 secretsmanager list-secret-version-ids --secret-id jason
+
+# get a secret value given its name and a specific temporal version
+aws --endpoint-url=http://localhost:4566 secretsmanager get-secret-value --secret-id jason --version-stage AWSPREVIOUS
+
+# get a secret value given its name and a specific version-id
+aws --endpoint-url=http://localhost:4566 secretsmanager get-secret-value --secret-id jason --version-id 22222222-8888-51cc-d55e-jk222222222f
+
 ```
